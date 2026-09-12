@@ -1,0 +1,32 @@
+{
+  "version": "1.0",
+  "description": "PayFlow AI collections policy. Change this file to change agent behavior — no code or prompt changes required.",
+
+  "max_discount_pct": 5,
+  "min_upfront_payment_pct": 50,
+  "max_payment_plan_days": 90,
+  "allowed_installments": 3,
+
+  "escalation_triggers": {
+    "hardship": "escalate",
+    "dispute": "escalate",
+    "legal_threat": "escalate",
+    "manager_request": "escalate",
+    "identity_verification_failed": "end_call",
+    "angry_customer": "escalate"
+  },
+
+  "payment_failed_action": "offer_retry_or_escalate",
+
+  "escalation_priority": {
+    "legal_threat": "urgent",
+    "hardship": "high",
+    "dispute": "high",
+    "manager_request": "medium",
+    "angry_customer": "medium",
+    "payment_failed": "low",
+    "other": "low"
+  },
+
+  "max_call_attempts_before_mandatory_escalation": 3
+}
