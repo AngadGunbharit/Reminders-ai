@@ -1,0 +1,295 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>PayFlow AI</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; background: #f1f5f9; color: #1e293b; }
+
+    /* Header */
+    header { background: #1e40af; color: white; padding: 0 24px; height: 56px; display: flex; align-items: center; gap: 12px; }
+    header h1 { font-size: 18px; font-weight: 700; letter-spacing: -0.3px; }
+    .badge-online { background: #22c55e; color: white; font-size: 11px; padding: 2px 8px; border-radius: 999px; font-weight: 600; }
+
+    /* Layout */
+    .layout { display: grid; grid-template-columns: 300px 1fr; height: calc(100vh - 56px); }
+
+    /* Sidebar */
+    .sidebar { background: white; border-right: 1px solid #e2e8f0; overflow-y: auto; display: flex; flex-direction: column; }
+    .section { padding: 16px; border-bottom: 1px solid #f1f5f9; }
+    .section-title { font-size: 11px; font-weight: 700; color: #94a3b8; text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 10px; }
+
+    /* Customer cards */
+    .customer-card { border: 2px solid #e2e8f0; border-radius: 8px; padding: 12px; margin-bottom: 8px; cursor: pointer; transition: all 0.12s; }
+    .customer-card:hover { border-color: #93c5fd; background: #f0f9ff; }
+    .customer-card.selected { border-color: #1d4ed8; background: #dbeafe; }
+    .cname { font-weight: 600; font-size: 14px; }
+    .cbalance { font-size: 20px; font-weight: 700; color: #1e40af; margin: 2px 0; }
+    .cmeta { display: flex; gap: 6px; align-items: center; flex-wrap: wrap; margin-top: 4px; }
+    .chip { font-size: 11px; padding: 1px 7px; border-radius: 4px; font-weight: 600; }
+    .chip-red { background: #fee2e2; color: #dc2626; }
+    .chip-green { background: #dcfce7; color: #15803d; }
+    .chip-yellow { background: #fef9c3; color: #a16207; }
+    .chip-gray { background: #f1f5f9; color: #64748b; }
+
+    /* Recent calls */
+    .call-row { padding: 8px 0; border-bottom: 1px solid #f8fafc; font-size: 13px; cursor: pointer; }
+    .call-row:last-child { border-bottom: none; }
+    .call-row:hover { color: #1d4ed8; }
+    .call-name { font-weight: 600; }
+    .call-sub { color: #94a3b8; font-size: 12px; }
+    .oc-paid { color: #16a34a; }
+    .oc-escalated { color: #d97706; }
+    .oc-none { color: #94a3b8; }
+
+    /* Right panel */
+    .panel { display: flex; flex-direction: column; overflow: hidden; }
+
+    /* Call form card */
+    .form-card { margin: 20px 24px 0; background: white; border-radius: 12px; border: 1px solid #e2e8f0; padding: 20px; }
+    .form-card h2 { font-size: 16px; font-weight: 700; margin-bottom: 4px; }
+    .form-card p { font-size: 13px; color: #64748b; margin-bottom: 14px; }
+    .form-row { display: grid; grid-template-columns: 1fr auto; gap: 10px; align-items: end; }
+    label { font-size: 12px; font-weight: 600; color: #374151; display: block; margin-bottom: 4px; }
+    input[type=tel] { width: 100%; padding: 10px 12px; border: 1px solid #d1d5db; border-radius: 8px; font-size: 14px; outline: none; }
+    input[type=tel]:focus { border-color: #3b82f6; box-shadow: 0 0 0 3px #eff6ff; }
+    .call-btn { padding: 10px 20px; background: #1d4ed8; color: white; border: none; border-radius: 8px; font-size: 14px; font-weight: 600; cursor: pointer; white-space: nowrap; transition: background 0.12s; }
+    .call-btn:hover:not(:disabled) { background: #1e40af; }
+    .call-btn:disabled { background: #93c5fd; cursor: not-allowed; }
+
+    /* Status strip */
+    .status { margin: 10px 24px 0; padding: 10px 14px; border-radius: 8px; font-size: 13px; display: none; }
+    .status.show { display: block; }
+    .status.active { background: #dbeafe; color: #1e40af; border: 1px solid #93c5fd; }
+    .status.done   { background: #dcfce7; color: #166534; border: 1px solid #86efac; }
+    .status.error  { background: #fee2e2; color: #dc2626; border: 1px solid #fca5a5; }
+
+    /* Transcript */
+    .transcript { flex: 1; overflow-y: auto; padding: 16px 24px 0; }
+    .t-title { font-size: 11px; font-weight: 700; color: #94a3b8; text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 12px; }
+    .turn { margin-bottom: 12px; }
+    .turn-label { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 3px; }
+    .turn-agent .turn-label   { color: #1d4ed8; }
+    .turn-customer .turn-label { color: #6b7280; }
+    .bubble { display: inline-block; padding: 9px 14px; border-radius: 12px; font-size: 14px; line-height: 1.5; max-width: 85%; }
+    .turn-agent   .bubble { background: #dbeafe; color: #1e3a8a; border-radius: 12px 12px 12px 3px; }
+    .turn-customer .bubble { background: #f1f5f9; color: #334155; border-radius: 12px 12px 3px 12px; }
+
+    /* Empty state */
+    .empty { text-align: center; padding: 48px 24px; color: #cbd5e1; }
+    .empty-icon { font-size: 48px; margin-bottom: 10px; }
+
+    /* Decision box */
+    .decision { margin: 16px 24px 24px; background: white; border: 1px solid #e2e8f0; border-radius: 12px; padding: 16px; }
+    .decision h3 { font-size: 11px; font-weight: 700; color: #94a3b8; text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 10px; }
+    .outcome-text { font-size: 16px; font-weight: 700; color: #1e40af; margin-bottom: 6px; }
+    .reason-item { font-size: 13px; color: #475569; margin: 2px 0; }
+    .check-item  { font-size: 13px; margin: 3px 0; }
+  </style>
+</head>
+<body>
+
+<header>
+  <h1>PayFlow AI</h1>
+  <span class="badge-online">● Live</span>
+</header>
+
+<div class="layout">
+
+  <!-- Sidebar -->
+  <div class="sidebar">
+    <div class="section">
+      <div class="section-title">Customers</div>
+      <div id="customer-list"><div style="color:#94a3b8;font-size:13px">Loading...</div></div>
+    </div>
+    <div class="section" style="flex:1">
+      <div class="section-title">Recent Calls</div>
+      <div id="recent-calls"><div style="color:#94a3b8;font-size:13px">No calls yet.</div></div>
+    </div>
+  </div>
+
+  <!-- Main panel -->
+  <div class="panel">
+
+    <!-- Form -->
+    <div class="form-card">
+      <h2>Make a Collection Call</h2>
+      <p id="selected-info">← Select a customer, then enter the number to call.</p>
+      <div class="form-row">
+        <div>
+          <label for="phone">Phone Number (E.164 format)</label>
+          <input type="tel" id="phone" placeholder="+14155550100" />
+        </div>
+        <button class="call-btn" id="call-btn" onclick="startCall()" disabled>📞 Call</button>
+      </div>
+    </div>
+
+    <!-- Status -->
+    <div class="status" id="status"></div>
+
+    <!-- Transcript -->
+    <div class="transcript" id="transcript">
+      <div class="empty">
+        <div class="empty-icon">🎙️</div>
+        <div>Transcript will appear here during the call</div>
+      </div>
+    </div>
+
+    <!-- Decision -->
+    <div id="decision"></div>
+
+  </div>
+</div>
+
+<script>
+  let selected = null;
+  let internalCallId = null;
+  let pollTimer = null;
+
+  // ── Bootstrap ───────────────────────────────────────────────────────
+  loadCustomers();
+  loadRecentCalls();
+
+  // ── Customers ───────────────────────────────────────────────────────
+  async function loadCustomers() {
+    const data = await fetch('/api/customers').then(r => r.json());
+    const el = document.getElementById('customer-list');
+    el.innerHTML = data.map(c => {
+      const hChip = `<span class="chip chip-${c.payment_history === 'good' ? 'green' : c.payment_history === 'fair' ? 'yellow' : 'red'}">${c.payment_history}</span>`;
+      return `<div class="customer-card" onclick="selectCustomer(this, ${esc(c)})">
+        <div class="cname">${c.name}</div>
+        <div class="cbalance">$${c.balance.toLocaleString()}</div>
+        <div class="cmeta">
+          <span class="chip chip-red">${c.days_overdue}d overdue</span>
+          ${hChip}
+          <span class="chip chip-gray">${c.previous_attempts} attempt${c.previous_attempts !== 1 ? 's' : ''}</span>
+        </div>
+      </div>`;
+    }).join('');
+  }
+
+  function esc(obj) {
+    return JSON.stringify(obj).replace(/"/g, '&quot;');
+  }
+
+  function selectCustomer(el, c) {
+    document.querySelectorAll('.customer-card').forEach(x => x.classList.remove('selected'));
+    el.classList.add('selected');
+    selected = c;
+    document.getElementById('selected-info').innerHTML =
+      `<strong>${c.name}</strong> &nbsp;·&nbsp; <strong>$${c.balance.toLocaleString()}</strong> outstanding &nbsp;·&nbsp; ${c.days_overdue} days overdue`;
+    document.getElementById('call-btn').disabled = false;
+  }
+
+  // ── Start call ──────────────────────────────────────────────────────
+  async function startCall() {
+    const phone = document.getElementById('phone').value.trim();
+    if (!phone) { alert('Enter a phone number in E.164 format (+1...)'); return; }
+    if (!selected) { alert('Select a customer first'); return; }
+
+    const btn = document.getElementById('call-btn');
+    btn.disabled = true;
+    btn.textContent = '⏳ Connecting…';
+    setStatus('Initiating call via Vapi…', 'active');
+    document.getElementById('transcript').innerHTML = '<div class="t-title">Live Transcript</div><div style="color:#94a3b8;font-size:13px;padding:8px 0">Connecting…</div>';
+    document.getElementById('decision').innerHTML = '';
+
+    try {
+      const res = await fetch('/api/call/start', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ phone_number: phone, customer_id: selected.id, invoice_id: selected.invoice_id }),
+      });
+      if (!res.ok) {
+        const err = await res.json();
+        throw new Error(err.detail || 'Failed to start call');
+      }
+      const data = await res.json();
+      internalCallId = data.internal_call_id;
+      setStatus(`📞 Call live · ${data.vapi_call_id.slice(0, 8)}…`, 'active');
+      btn.textContent = '📞 In progress…';
+      pollTimer = setInterval(poll, 2000);
+    } catch (e) {
+      setStatus(`Error: ${e.message}`, 'error');
+      btn.disabled = false;
+      btn.textContent = '📞 Call';
+    }
+  }
+
+  // ── Poll transcript ─────────────────────────────────────────────────
+  async function poll() {
+    if (!internalCallId) return;
+    try {
+      const data = await fetch(`/api/call/${internalCallId}/log`).then(r => r.json());
+      renderTranscript(data.turns);
+      if (data.call.status !== 'in_progress') {
+        clearInterval(pollTimer); pollTimer = null;
+        const btn = document.getElementById('call-btn');
+        btn.disabled = !selected;
+        btn.textContent = '📞 Call';
+        setStatus(`✅ Call ended · ${data.call.outcome || 'no outcome'}`, 'done');
+        if (data.decision) renderDecision(data.decision);
+        loadRecentCalls();
+      }
+    } catch (_) {}
+  }
+
+  // ── Render ──────────────────────────────────────────────────────────
+  function renderTranscript(turns) {
+    const el = document.getElementById('transcript');
+    if (!turns.length) { el.innerHTML = '<div class="t-title">Live Transcript</div><div style="color:#94a3b8;font-size:13px">Waiting for first message…</div>'; return; }
+    el.innerHTML = '<div class="t-title">Live Transcript</div>' + turns.map(t => `
+      <div class="turn turn-${t.speaker}">
+        <div class="turn-label">${t.speaker === 'agent' ? '🤖 Ava' : '👤 Customer'}</div>
+        <div class="bubble">${t.message}</div>
+      </div>`).join('');
+    el.scrollTop = el.scrollHeight;
+  }
+
+  function renderDecision(d) {
+    const checks = Object.entries(d.policy_checks)
+      .map(([k, v]) => `<div class="check-item">${v.result === 'pass' ? '✅' : '❌'} <strong>${k.replace(/_/g,' ')}</strong>: ${v.detail}</div>`)
+      .join('');
+    document.getElementById('decision').innerHTML = `
+      <div class="decision">
+        <h3>Agent Decision</h3>
+        <div class="outcome-text">${d.outcome}</div>
+        ${d.reasoning.map(r => `<div class="reason-item">· ${r}</div>`).join('')}
+        <div style="margin-top:10px">${checks}</div>
+      </div>`;
+  }
+
+  async function loadRecentCalls() {
+    const data = await fetch('/api/calls').then(r => r.json());
+    const el = document.getElementById('recent-calls');
+    if (!data.length) { el.innerHTML = '<div style="color:#94a3b8;font-size:13px">No calls yet.</div>'; return; }
+    el.innerHTML = data.slice(0, 8).map(c => {
+      const oc = c.outcome || (c.status === 'in_progress' ? 'in progress' : '—');
+      const cls = oc.includes('paid') || oc.includes('accepted') ? 'oc-paid' : oc === 'escalated' ? 'oc-escalated' : 'oc-none';
+      return `<div class="call-row" onclick="loadCallLog('${c.id}')">
+        <div class="call-name ${cls}">${c.customer_name}</div>
+        <div class="call-sub">${oc} · $${c.balance?.toLocaleString() || '—'} · ${(c.started_at || '').slice(0,10)}</div>
+      </div>`;
+    }).join('');
+  }
+
+  async function loadCallLog(callId) {
+    internalCallId = callId;
+    if (pollTimer) { clearInterval(pollTimer); pollTimer = null; }
+    const data = await fetch(`/api/call/${callId}/log`).then(r => r.json());
+    renderTranscript(data.turns);
+    if (data.decision) renderDecision(data.decision);
+    const oc = data.call.outcome || data.call.status;
+    setStatus(`Viewing call · ${oc}`, data.call.status === 'in_progress' ? 'active' : 'done');
+  }
+
+  function setStatus(msg, cls) {
+    const el = document.getElementById('status');
+    el.textContent = msg;
+    el.className = `status show ${cls}`;
+  }
+</script>
+</body>
+</html>
