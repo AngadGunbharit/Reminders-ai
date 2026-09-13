@@ -238,12 +238,30 @@ async def chat_completions(request: Request):
 
     agent = _sessions.get(vapi_call_id)
     if agent is None:
+        # Session missing (e.g. server restart) — create a new call row then attach
+        contact_name  = metadata.get("contact_name", "there")
+        contact_phone = metadata.get("contact_phone", "")
+        purpose       = metadata.get("purpose", "")
+        call_id = str(uuid.uuid4())
+        with db.tx() as conn:
+            db.insert(conn, "calls", {
+                "id": call_id,
+                "campaign_id": None,
+                "contact_id": None,
+                "contact_name": contact_name,
+                "contact_phone": contact_phone,
+                "purpose": purpose,
+                "scheduled_at": None,
+                "status": "pending",
+                "created_at": db.now(),
+            })
         agent = ReminderAgent(
-            contact_name=metadata.get("contact_name", "there"),
-            contact_phone=metadata.get("contact_phone", ""),
-            purpose=metadata.get("purpose", ""),
+            contact_name=contact_name,
+            contact_phone=contact_phone,
+            purpose=purpose,
             use_llm=True,
         )
+        agent.init_call(call_id)
         agent.opening_line()
         _sessions[vapi_call_id] = agent
 
