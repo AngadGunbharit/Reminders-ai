@@ -58,7 +58,7 @@ class ReminderAgent:
     purpose: str
     use_llm: bool = field(default_factory=lambda: bool(os.environ.get("ANTHROPIC_API_KEY")))
 
-    call_id: str = field(init=False)
+    call_id: str = field(default="", init=False)
     turn_index: int = field(default=0, init=False)
     _messages: list = field(default_factory=list, init=False)
     _client: Any = field(default=None, init=False)
@@ -66,15 +66,16 @@ class ReminderAgent:
     _notes: str = field(default="", init=False)
 
     def __post_init__(self):
+        pass  # call_id assigned externally when created via db
+
+    def init_call(self, call_id: str):
+        """Attach to an existing calls row and mark it in_progress."""
+        self.call_id = call_id
         with db.tx() as conn:
-            self.call_id = db.insert(conn, "calls", {
-                "contact_name": self.contact_name,
-                "contact_phone": self.contact_phone,
-                "purpose": self.purpose,
-                "started_at": db.now(),
-                "status": "in_progress",
-                "created_at": db.now(),
-            })
+            conn.execute(
+                "UPDATE calls SET status='in_progress', started_at=? WHERE id=?",
+                (db.now(), call_id),
+            )
         if self.use_llm:
             import anthropic
             self._client = anthropic.Anthropic()

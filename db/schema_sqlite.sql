@@ -1,5 +1,4 @@
--- Ava Reminders — SQLite schema
--- Simple: contacts (optional), calls, conversation turns.
+-- Ava Reminds — SQLite schema
 
 PRAGMA foreign_keys = ON;
 
@@ -11,16 +10,31 @@ CREATE TABLE IF NOT EXISTS contacts (
     created_at TEXT NOT NULL
 );
 
+CREATE TABLE IF NOT EXISTS campaigns (
+    id           TEXT PRIMARY KEY,
+    purpose      TEXT NOT NULL,
+    status       TEXT NOT NULL DEFAULT 'pending'
+                     CHECK (status IN ('pending', 'running', 'completed', 'paused')),
+    scheduled_at TEXT,           -- NULL = send immediately
+    total        INTEGER NOT NULL DEFAULT 0,
+    completed    INTEGER NOT NULL DEFAULT 0,
+    created_at   TEXT NOT NULL
+);
+
+CREATE INDEX IF NOT EXISTS idx_campaigns_status ON campaigns(status);
+
 CREATE TABLE IF NOT EXISTS calls (
     id             TEXT PRIMARY KEY,
+    campaign_id    TEXT REFERENCES campaigns(id) ON DELETE SET NULL,
     contact_id     TEXT REFERENCES contacts(id) ON DELETE SET NULL,
     contact_name   TEXT NOT NULL,
     contact_phone  TEXT NOT NULL,
     purpose        TEXT NOT NULL,
-    started_at     TEXT NOT NULL,
+    scheduled_at   TEXT,          -- NULL = send immediately; future = scheduled
+    started_at     TEXT,
     ended_at       TEXT,
-    status         TEXT NOT NULL DEFAULT 'in_progress'
-                       CHECK (status IN ('in_progress', 'completed', 'failed')),
+    status         TEXT NOT NULL DEFAULT 'pending'
+                       CHECK (status IN ('pending', 'scheduled', 'in_progress', 'completed', 'failed')),
     outcome        TEXT CHECK (outcome IN (
                        'confirmed', 'declined', 'callback_requested',
                        'wrong_number', 'completed', NULL)),
@@ -28,8 +42,9 @@ CREATE TABLE IF NOT EXISTS calls (
     created_at     TEXT NOT NULL
 );
 
-CREATE INDEX IF NOT EXISTS idx_calls_contact ON calls(contact_id);
-CREATE INDEX IF NOT EXISTS idx_calls_started ON calls(started_at);
+CREATE INDEX IF NOT EXISTS idx_calls_campaign  ON calls(campaign_id);
+CREATE INDEX IF NOT EXISTS idx_calls_scheduled ON calls(scheduled_at);
+CREATE INDEX IF NOT EXISTS idx_calls_status    ON calls(status);
 
 CREATE TABLE IF NOT EXISTS conversation_turns (
     id          TEXT PRIMARY KEY,
