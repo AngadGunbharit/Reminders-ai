@@ -5,266 +5,395 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Ava Reminds</title>
   <style>
-    * { box-sizing: border-box; margin: 0; padding: 0; }
-    body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; background: #f8fafc; color: #1e293b; }
+    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
 
-    /* Header */
-    header { background: #6d28d9; color: white; padding: 0 28px; height: 58px; display: flex; align-items: center; justify-content: space-between; }
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg:        #ffffff;
+      --bg-sub:    #f9fafb;
+      --bg-hover:  #f3f4f6;
+      --border:    #e5e7eb;
+      --border-mid:#d1d5db;
+      --text:      #111827;
+      --text-2:    #374151;
+      --text-3:    #6b7280;
+      --text-4:    #9ca3af;
+      --accent:    #4f46e5;
+      --accent-h:  #4338ca;
+      --accent-bg: #eef2ff;
+    }
+    [data-theme="dark"] {
+      --bg:        #111827;
+      --bg-sub:    #0d1117;
+      --bg-hover:  #1f2937;
+      --border:    #1f2937;
+      --border-mid:#374151;
+      --text:      #f9fafb;
+      --text-2:    #e5e7eb;
+      --text-3:    #9ca3af;
+      --text-4:    #6b7280;
+      --accent:    #6366f1;
+      --accent-h:  #4f46e5;
+      --accent-bg: #1e1b4b;
+    }
+
+    body { font-family: 'Inter', -apple-system, sans-serif; background: var(--bg-sub); color: var(--text); font-size: 14px; line-height: 1.5; }
+
+    /* ── Header ── */
+    header {
+      height: 56px;
+      background: var(--bg);
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0 24px;
+      position: sticky; top: 0; z-index: 100;
+    }
     .logo { display: flex; align-items: center; gap: 10px; }
-    .logo-icon { font-size: 22px; }
-    .logo h1 { font-size: 18px; font-weight: 700; letter-spacing: -0.3px; }
-    .logo span { font-size: 13px; opacity: 0.75; margin-left: 2px; }
-    .badge-live { background: #22c55e; color: white; font-size: 11px; padding: 3px 10px; border-radius: 999px; font-weight: 600; }
+    .logo-mark {
+      width: 28px; height: 28px;
+      background: var(--accent);
+      border-radius: 7px;
+      display: flex; align-items: center; justify-content: center;
+      color: white; font-size: 14px;
+    }
+    .logo-name { font-size: 15px; font-weight: 600; color: var(--text); letter-spacing: -0.3px; }
+    .logo-name span { color: var(--text-3); font-weight: 400; }
+    .header-right { display: flex; align-items: center; gap: 12px; }
+    .live-indicator { display: flex; align-items: center; gap: 6px; font-size: 12px; font-weight: 500; color: var(--text-3); }
+    .live-dot { width: 6px; height: 6px; border-radius: 50%; background: #22c55e; }
 
-    /* Layout */
-    .layout { display: grid; grid-template-columns: 280px 1fr; height: calc(100vh - 58px); }
+    /* ── Theme toggle ── */
+    .theme-toggle {
+      width: 32px; height: 32px; border-radius: 8px;
+      border: 1px solid var(--border); background: var(--bg-sub);
+      cursor: pointer; display: flex; align-items: center; justify-content: center;
+      color: var(--text-3); transition: all 0.12s;
+    }
+    .theme-toggle:hover { background: var(--bg-hover); color: var(--text-2); border-color: var(--border-mid); }
 
-    /* Sidebar */
-    .sidebar { background: white; border-right: 1px solid #e2e8f0; overflow-y: auto; display: flex; flex-direction: column; }
-    .sidebar-header { padding: 14px 16px 10px; border-bottom: 1px solid #f1f5f9; display: flex; align-items: center; justify-content: space-between; }
-    .sidebar-header h2 { font-size: 12px; font-weight: 700; color: #94a3b8; text-transform: uppercase; letter-spacing: 0.08em; }
-    .sidebar-tabs { display: flex; gap: 6px; }
-    .stab { font-size: 11px; padding: 3px 9px; border: 1.5px solid #e2e8f0; border-radius: 8px; cursor: pointer; color: #64748b; background: white; font-weight: 600; transition: all 0.12s; }
-    .stab.active { background: #ede9fe; border-color: #a78bfa; color: #6d28d9; }
+    /* ── Shell ── */
+    .shell { display: grid; grid-template-columns: 260px 1fr; height: calc(100vh - 56px); }
 
-    .call-item { padding: 12px 16px; border-bottom: 1px solid #f8fafc; cursor: pointer; transition: background 0.1s; }
-    .call-item:hover { background: #f8fafc; }
-    .call-item.active { background: #f3e8ff; border-left: 3px solid #7c3aed; padding-left: 13px; }
-    .call-name { font-weight: 600; font-size: 14px; display: flex; align-items: center; gap: 6px; flex-wrap: wrap; }
-    .call-purpose-preview { font-size: 12px; color: #64748b; margin-top: 2px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 220px; }
-    .call-time { font-size: 11px; color: #94a3b8; margin-top: 2px; }
-    .outcome-badge { font-size: 11px; padding: 1px 6px; border-radius: 4px; font-weight: 600; }
-    .oc-confirmed { background: #dcfce7; color: #15803d; }
-    .oc-declined { background: #fee2e2; color: #dc2626; }
-    .oc-callback_requested { background: #fef9c3; color: #a16207; }
-    .oc-completed { background: #f1f5f9; color: #64748b; }
-    .oc-in_progress { background: #dbeafe; color: #1d4ed8; }
-    .oc-scheduled { background: #fef3c7; color: #92400e; }
-    .oc-pending { background: #f1f5f9; color: #64748b; }
-    .oc-running { background: #dbeafe; color: #1d4ed8; }
+    /* ── Sidebar ── */
+    .sidebar { background: var(--bg); border-right: 1px solid var(--border); display: flex; flex-direction: column; overflow: hidden; }
+    .sidebar-head { padding: 16px; border-bottom: 1px solid var(--border); }
+    .sidebar-tabs { display: flex; gap: 4px; background: var(--bg-sub); border-radius: 8px; padding: 3px; }
+    .stab {
+      flex: 1; padding: 5px 10px; font-size: 12px; font-weight: 500;
+      border: none; border-radius: 6px; cursor: pointer;
+      color: var(--text-3); background: transparent;
+      font-family: inherit; transition: all 0.12s;
+    }
+    .stab.active { background: var(--bg); color: var(--text); box-shadow: 0 1px 3px rgba(0,0,0,0.08); }
+    .sidebar-body { flex: 1; overflow-y: auto; }
+    .sidebar-body::-webkit-scrollbar { width: 4px; }
+    .sidebar-body::-webkit-scrollbar-thumb { background: var(--border); border-radius: 4px; }
 
-    .empty-sidebar { padding: 32px 16px; text-align: center; color: #cbd5e1; font-size: 13px; }
+    .history-item {
+      padding: 11px 16px; border-bottom: 1px solid var(--border);
+      cursor: pointer; transition: background 0.1s;
+    }
+    .history-item:hover { background: var(--bg-hover); }
+    .history-item.active { background: var(--accent-bg); border-left: 2px solid var(--accent); padding-left: 14px; }
+    .hi-top { display: flex; align-items: center; justify-content: space-between; margin-bottom: 2px; }
+    .hi-name { font-weight: 600; font-size: 13px; color: var(--text); }
+    .hi-time { font-size: 11px; color: var(--text-4); }
+    .hi-purpose { font-size: 12px; color: var(--text-3); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 210px; margin-bottom: 4px; }
 
-    /* Main panel */
-    .panel { display: flex; flex-direction: column; overflow: hidden; }
+    .empty-state { padding: 40px 20px; text-align: center; }
+    .empty-state p { font-size: 13px; color: var(--text-4); line-height: 1.6; }
 
-    /* Tabs */
-    .mode-tabs { display: flex; gap: 0; margin: 20px 28px 0; border: 1.5px solid #e2e8f0; border-radius: 12px; overflow: hidden; background: white; }
-    .mtab { flex: 1; padding: 10px; font-size: 13px; font-weight: 600; text-align: center; cursor: pointer; color: #64748b; background: white; border: none; transition: all 0.12s; }
-    .mtab.active { background: #6d28d9; color: white; }
+    /* ── Status badges ── */
+    .badge {
+      display: inline-flex; align-items: center; gap: 4px;
+      font-size: 11px; font-weight: 500;
+      padding: 2px 8px; border-radius: 4px;
+    }
+    .badge::before { content: ''; width: 5px; height: 5px; border-radius: 50%; }
+    .oc-confirmed         { background: #f0fdf4; color: #166534; } .oc-confirmed::before { background: #22c55e; }
+    .oc-declined          { background: #fef2f2; color: #991b1b; } .oc-declined::before { background: #ef4444; }
+    .oc-callback_requested{ background: #fffbeb; color: #92400e; } .oc-callback_requested::before { background: #f59e0b; }
+    .oc-completed         { background: #f9fafb; color: #374151; } .oc-completed::before { background: #9ca3af; }
+    .oc-in_progress       { background: #eff6ff; color: #1e40af; } .oc-in_progress::before { background: #3b82f6; }
+    .oc-scheduled         { background: #fff7ed; color: #9a3412; } .oc-scheduled::before { background: #f97316; }
+    .oc-pending           { background: #f9fafb; color: #374151; } .oc-pending::before { background: #9ca3af; }
+    .oc-running           { background: #eff6ff; color: #1e40af; } .oc-running::before { background: #3b82f6; }
+    .oc-failed            { background: #fef2f2; color: #991b1b; } .oc-failed::before { background: #ef4444; }
+    .oc-wrong_number      { background: #f9fafb; color: #374151; } .oc-wrong_number::before { background: #9ca3af; }
 
-    /* New call form */
-    .new-call-card { margin: 16px 28px 0; background: white; border-radius: 16px; border: 1px solid #e2e8f0; padding: 22px 24px; box-shadow: 0 1px 4px rgba(0,0,0,0.04); }
-    .new-call-card h2 { font-size: 16px; font-weight: 700; margin-bottom: 16px; color: #1e293b; }
+    [data-theme="dark"] .oc-confirmed          { background: rgba(34,197,94,0.12);  color: #4ade80; }
+    [data-theme="dark"] .oc-declined           { background: rgba(239,68,68,0.12);  color: #f87171; }
+    [data-theme="dark"] .oc-callback_requested { background: rgba(245,158,11,0.12); color: #fbbf24; }
+    [data-theme="dark"] .oc-completed          { background: rgba(156,163,175,0.1); color: #9ca3af; }
+    [data-theme="dark"] .oc-in_progress        { background: rgba(59,130,246,0.12); color: #60a5fa; }
+    [data-theme="dark"] .oc-scheduled          { background: rgba(249,115,22,0.12); color: #fb923c; }
+    [data-theme="dark"] .oc-pending            { background: rgba(156,163,175,0.1); color: #9ca3af; }
+    [data-theme="dark"] .oc-running            { background: rgba(59,130,246,0.12); color: #60a5fa; }
+    [data-theme="dark"] .oc-failed             { background: rgba(239,68,68,0.12);  color: #f87171; }
+    [data-theme="dark"] .oc-wrong_number       { background: rgba(156,163,175,0.1); color: #9ca3af; }
 
-    .contact-row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 14px; }
-    .field label { font-size: 12px; font-weight: 600; color: #374151; display: block; margin-bottom: 5px; }
-    .field input { width: 100%; padding: 10px 14px; border: 1.5px solid #e2e8f0; border-radius: 10px; font-size: 14px; outline: none; transition: border-color 0.12s; background: #fafafa; }
-    .field input:focus { border-color: #7c3aed; box-shadow: 0 0 0 3px #ede9fe; background: white; }
-    .field input::placeholder { color: #94a3b8; }
+    /* ── Main ── */
+    .main { display: flex; flex-direction: column; overflow: hidden; }
 
-    /* Purpose block */
-    .purpose-block label { font-size: 12px; font-weight: 600; color: #374151; display: block; margin-bottom: 5px; }
-    .purpose-textarea { width: 100%; padding: 12px 14px; border: 1.5px solid #e2e8f0; border-radius: 10px; font-size: 14px; line-height: 1.6; resize: vertical; min-height: 80px; outline: none; font-family: inherit; color: #1e293b; background: #fafafa; transition: border-color 0.12s; }
-    .purpose-textarea:focus { border-color: #7c3aed; box-shadow: 0 0 0 3px #ede9fe; background: white; }
-    .purpose-textarea::placeholder { color: #94a3b8; }
+    /* ── Top bar inside main ── */
+    .main-topbar {
+      padding: 20px 28px 0;
+      display: flex; align-items: center; gap: 8px;
+    }
+    .mode-btn {
+      padding: 7px 14px; font-size: 13px; font-weight: 500;
+      border: 1px solid var(--border); border-radius: 8px;
+      background: var(--bg); color: var(--text-2);
+      cursor: pointer; font-family: inherit; transition: all 0.12s;
+    }
+    .mode-btn:hover { border-color: var(--border-mid); color: var(--text); }
+    .mode-btn.active { background: var(--text); color: white; border-color: var(--text); }
 
-    /* Suggestions */
-    .suggestions-row { margin-top: 9px; display: flex; flex-wrap: wrap; gap: 7px; }
-    .suggestion-btn { font-size: 12px; padding: 5px 11px; background: #f8fafc; border: 1.5px solid #e2e8f0; border-radius: 20px; cursor: pointer; color: #475569; transition: all 0.12s; font-weight: 500; }
-    .suggestion-btn:hover { background: #ede9fe; border-color: #a78bfa; color: #6d28d9; }
-    .suggestion-btn.active { background: #ede9fe; border-color: #7c3aed; color: #6d28d9; font-weight: 600; }
+    /* ── Form panels ── */
+    .form-panel { margin: 16px 28px 0; background: var(--bg); border: 1px solid var(--border); border-radius: 12px; padding: 24px; }
+    .panel-title { font-size: 13px; font-weight: 600; color: var(--text); margin-bottom: 18px; }
 
-    /* Schedule row */
-    .schedule-row { margin-top: 14px; display: flex; align-items: center; gap: 10px; }
-    .schedule-row label { font-size: 12px; font-weight: 600; color: #374151; white-space: nowrap; }
-    .schedule-row input[type="datetime-local"] { padding: 9px 12px; border: 1.5px solid #e2e8f0; border-radius: 10px; font-size: 13px; outline: none; background: #fafafa; color: #1e293b; transition: border-color 0.12s; }
-    .schedule-row input[type="datetime-local"]:focus { border-color: #7c3aed; box-shadow: 0 0 0 3px #ede9fe; background: white; }
-    .clear-schedule { font-size: 12px; color: #94a3b8; cursor: pointer; text-decoration: underline; }
+    .two-col { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; margin-bottom: 14px; }
+    .field { display: flex; flex-direction: column; gap: 5px; }
+    .field label { font-size: 12px; font-weight: 500; color: var(--text-2); }
+    .field input, .field textarea {
+      width: 100%; padding: 8px 12px;
+      border: 1px solid var(--border);
+      border-radius: 8px; font-size: 13px; color: var(--text);
+      background: var(--bg); outline: none; font-family: inherit;
+      transition: border-color 0.12s, box-shadow 0.12s;
+    }
+    .field input:focus, .field textarea:focus {
+      border-color: var(--accent);
+      box-shadow: 0 0 0 3px rgba(79,70,229,0.08);
+    }
+    .field input::placeholder, .field textarea::placeholder { color: var(--text-4); }
+    .field textarea { resize: vertical; min-height: 80px; line-height: 1.55; }
 
-    /* Call button */
-    .call-action { display: flex; align-items: center; justify-content: flex-end; margin-top: 14px; gap: 12px; }
-    .char-count { font-size: 12px; color: #94a3b8; }
-    .call-btn { padding: 11px 24px; background: #7c3aed; color: white; border: none; border-radius: 10px; font-size: 14px; font-weight: 600; cursor: pointer; transition: background 0.12s; display: flex; align-items: center; gap: 7px; }
-    .call-btn:hover:not(:disabled) { background: #6d28d9; }
-    .call-btn:disabled { background: #c4b5fd; cursor: not-allowed; }
+    /* Suggestion chips */
+    .chips { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 8px; }
+    .chip {
+      padding: 4px 10px; font-size: 12px; font-weight: 500;
+      border: 1px solid var(--border); border-radius: 6px;
+      background: var(--bg); color: var(--text-3);
+      cursor: pointer; font-family: inherit; transition: all 0.1s;
+    }
+    .chip:hover { border-color: var(--border-mid); color: var(--text-2); background: var(--bg-hover); }
+    .chip.active { background: var(--accent-bg); border-color: #a5b4fc; color: var(--accent); }
 
-    /* ── CSV / Bulk panel ── */
-    .bulk-card { margin: 16px 28px 0; background: white; border-radius: 16px; border: 1px solid #e2e8f0; padding: 22px 24px; box-shadow: 0 1px 4px rgba(0,0,0,0.04); display: none; flex-direction: column; gap: 14px; }
-    .bulk-card.visible { display: flex; }
-    .bulk-card h2 { font-size: 16px; font-weight: 700; color: #1e293b; }
+    /* Schedule */
+    .schedule-field { display: flex; align-items: center; gap: 10px; margin-top: 14px; }
+    .schedule-field label { font-size: 12px; font-weight: 500; color: var(--text-2); white-space: nowrap; }
+    .schedule-field input[type="datetime-local"] {
+      padding: 7px 10px; border: 1px solid var(--border); border-radius: 8px;
+      font-size: 13px; color: var(--text); background: var(--bg);
+      outline: none; font-family: inherit; transition: border-color 0.12s;
+    }
+    .schedule-field input[type="datetime-local"]:focus { border-color: var(--accent); }
+    .text-btn { font-size: 12px; color: var(--text-4); cursor: pointer; background: none; border: none; font-family: inherit; }
+    .text-btn:hover { color: var(--text-3); }
 
-    .drop-zone { border: 2px dashed #c4b5fd; border-radius: 12px; padding: 28px 20px; text-align: center; cursor: pointer; color: #94a3b8; transition: all 0.15s; background: #faf8ff; }
-    .drop-zone.drag-over { border-color: #7c3aed; background: #ede9fe; color: #6d28d9; }
-    .drop-zone p { font-size: 14px; margin-top: 6px; }
-    .drop-zone strong { font-size: 16px; }
+    /* Form footer */
+    .form-footer { display: flex; align-items: center; justify-content: flex-end; gap: 10px; margin-top: 18px; padding-top: 16px; border-top: 1px solid var(--border); }
+    .char-hint { font-size: 12px; color: var(--text-4); }
+    .btn-primary {
+      padding: 8px 18px; font-size: 13px; font-weight: 600;
+      background: var(--accent); color: white;
+      border: none; border-radius: 8px; cursor: pointer;
+      font-family: inherit; transition: background 0.12s;
+      display: flex; align-items: center; gap: 7px;
+    }
+    .btn-primary:hover:not(:disabled) { background: var(--accent-h); }
+    .btn-primary:disabled { opacity: 0.5; cursor: not-allowed; }
+
+    /* ── Drop zone ── */
+    .drop-zone {
+      border: 1.5px dashed var(--border-mid);
+      border-radius: 10px; padding: 28px 20px;
+      text-align: center; cursor: pointer;
+      background: var(--bg-sub); transition: all 0.15s;
+    }
+    .drop-zone:hover, .drop-zone.drag-over { border-color: var(--accent); background: var(--accent-bg); }
+    .dz-title { font-size: 13px; font-weight: 600; color: var(--text-2); margin-bottom: 3px; }
+    .dz-sub { font-size: 12px; color: var(--text-4); }
+    .dz-sub code { font-family: 'SF Mono', monospace; font-size: 11px; background: var(--border); padding: 1px 4px; border-radius: 3px; }
     .drop-zone input[type=file] { display: none; }
 
-    .csv-hint { font-size: 12px; color: #94a3b8; }
-    .csv-hint code { background: #f1f5f9; padding: 1px 5px; border-radius: 4px; font-size: 11px; }
+    /* Preview table */
+    .preview-table-wrap { border: 1px solid var(--border); border-radius: 8px; overflow: hidden; max-height: 160px; overflow-y: auto; }
+    .preview-table-wrap::-webkit-scrollbar { width: 4px; }
+    .preview-table-wrap::-webkit-scrollbar-thumb { background: var(--border); border-radius: 4px; }
+    .preview-table-wrap table { width: 100%; border-collapse: collapse; font-size: 13px; }
+    .preview-table-wrap th { background: var(--bg-sub); padding: 7px 12px; text-align: left; font-size: 11px; font-weight: 600; color: var(--text-3); border-bottom: 1px solid var(--border); }
+    .preview-table-wrap td { padding: 7px 12px; border-bottom: 1px solid var(--border); color: var(--text-2); }
+    .preview-table-wrap tr:last-child td { border-bottom: none; }
+    .remove-row { color: var(--text-4); cursor: pointer; font-size: 13px; }
+    .remove-row:hover { color: #ef4444; }
 
-    /* Contact preview table */
-    .preview-wrap { max-height: 160px; overflow-y: auto; border: 1px solid #e2e8f0; border-radius: 10px; }
-    .preview-wrap table { width: 100%; border-collapse: collapse; font-size: 13px; }
-    .preview-wrap th { background: #f8fafc; padding: 7px 12px; text-align: left; font-size: 11px; font-weight: 700; color: #64748b; text-transform: uppercase; letter-spacing: 0.04em; border-bottom: 1px solid #e2e8f0; }
-    .preview-wrap td { padding: 7px 12px; border-bottom: 1px solid #f8fafc; }
-    .preview-wrap tr:last-child td { border-bottom: none; }
-    .remove-row { color: #ef4444; cursor: pointer; font-size: 13px; }
+    .bulk-footer { display: flex; align-items: center; justify-content: space-between; padding-top: 16px; border-top: 1px solid var(--border); }
+    .contact-count { font-size: 12px; color: var(--text-3); }
 
-    .bulk-action { display: flex; align-items: center; justify-content: space-between; }
-    .contact-count { font-size: 13px; color: #64748b; font-weight: 500; }
+    /* ── Status bar ── */
+    .status-bar {
+      margin: 12px 28px 0;
+      padding: 10px 14px; border-radius: 8px;
+      font-size: 13px; font-weight: 500; display: none;
+    }
+    .status-bar.show { display: flex; align-items: center; gap: 8px; }
+    .status-bar.active { background: #eff6ff; color: #1e40af; border: 1px solid #bfdbfe; }
+    .status-bar.done   { background: #f0fdf4; color: #166534; border: 1px solid #bbf7d0; }
+    .status-bar.error  { background: #fef2f2; color: #991b1b; border: 1px solid #fecaca; }
+    .status-bar.info   { background: #fff7ed; color: #9a3412; border: 1px solid #fed7aa; }
 
-    /* Status */
-    .status-bar { margin: 10px 28px 0; padding: 10px 16px; border-radius: 10px; font-size: 13px; display: none; font-weight: 500; }
-    .status-bar.show { display: block; }
-    .status-bar.active { background: #ede9fe; color: #6d28d9; border: 1px solid #c4b5fd; }
-    .status-bar.done   { background: #dcfce7; color: #166534; border: 1px solid #86efac; }
-    .status-bar.error  { background: #fee2e2; color: #dc2626; border: 1px solid #fca5a5; }
-    .status-bar.info   { background: #f0f9ff; color: #0369a1; border: 1px solid #bae6fd; }
+    /* ── Transcript ── */
+    .transcript-section { flex: 1; overflow-y: auto; padding: 20px 28px; }
+    .transcript-section::-webkit-scrollbar { width: 4px; }
+    .transcript-section::-webkit-scrollbar-thumb { background: var(--border); border-radius: 4px; }
 
-    /* Transcript area */
-    .transcript-wrap { flex: 1; overflow-y: auto; padding: 14px 28px 24px; }
-    .transcript-title { font-size: 11px; font-weight: 700; color: #94a3b8; text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 14px; }
+    .section-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 16px; }
+    .section-title { font-size: 12px; font-weight: 600; color: var(--text-3); text-transform: uppercase; letter-spacing: 0.06em; }
 
-    .turn { margin-bottom: 14px; }
-    .turn-label { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 4px; }
-    .turn-agent   .turn-label { color: #7c3aed; }
-    .turn-contact .turn-label { color: #64748b; }
-    .bubble { display: inline-block; padding: 10px 16px; border-radius: 14px; font-size: 14px; line-height: 1.55; max-width: 80%; }
-    .turn-agent   .bubble { background: #ede9fe; color: #3b0764; border-radius: 14px 14px 14px 4px; }
-    .turn-contact .bubble { background: #f1f5f9; color: #334155; border-radius: 14px 14px 4px 14px; }
+    .turn { margin-bottom: 16px; }
+    .turn-speaker { font-size: 11px; font-weight: 600; color: var(--text-4); margin-bottom: 5px; text-transform: uppercase; letter-spacing: 0.05em; }
+    .turn-agent .turn-speaker { color: var(--accent); }
+    .bubble { display: inline-block; padding: 10px 14px; border-radius: 10px; font-size: 13px; line-height: 1.6; max-width: 72%; }
+    .turn-agent   .bubble { background: var(--accent-bg); color: #312e81; border-radius: 10px 10px 10px 3px; }
+    .turn-contact .bubble { background: var(--bg-hover); color: var(--text-2); border-radius: 10px 10px 3px 10px; border: 1px solid var(--border); }
+    [data-theme="dark"] .turn-agent .bubble { color: #c7d2fe; }
 
-    .empty-transcript { text-align: center; padding: 40px 24px; color: #cbd5e1; }
-    .empty-icon { font-size: 44px; margin-bottom: 10px; }
-    .empty-text { font-size: 14px; }
+    .empty-transcript { height: 100%; display: flex; flex-direction: column; align-items: center; justify-content: center; color: var(--text-4); text-align: center; }
+    .empty-transcript svg { margin-bottom: 14px; opacity: 0.25; }
+    .empty-transcript p { font-size: 13px; line-height: 1.6; max-width: 220px; }
 
-    /* Campaign progress view */
-    .campaign-view { flex: 1; overflow-y: auto; padding: 16px 28px 24px; }
-    .campaign-header { display: flex; align-items: center; gap: 12px; margin-bottom: 16px; }
-    .campaign-header h3 { font-size: 16px; font-weight: 700; flex: 1; }
-    .progress-bar-wrap { background: #f1f5f9; border-radius: 999px; height: 8px; overflow: hidden; margin-bottom: 6px; }
-    .progress-bar-fill { background: #7c3aed; height: 100%; border-radius: 999px; transition: width 0.4s; }
-    .progress-text { font-size: 12px; color: #64748b; margin-bottom: 16px; }
-    .campaign-calls-table { width: 100%; border-collapse: collapse; font-size: 13px; border: 1px solid #e2e8f0; border-radius: 10px; overflow: hidden; }
-    .campaign-calls-table th { background: #f8fafc; padding: 8px 12px; text-align: left; font-size: 11px; font-weight: 700; color: #64748b; text-transform: uppercase; letter-spacing: 0.04em; border-bottom: 1px solid #e2e8f0; }
-    .campaign-calls-table td { padding: 9px 12px; border-bottom: 1px solid #f8fafc; }
-    .campaign-calls-table tr:last-child td { border-bottom: none; }
-    .campaign-calls-table tr:hover td { background: #f8fafc; cursor: pointer; }
+    /* ── Outcome ── */
+    .outcome-card {
+      margin: 0 28px 24px;
+      background: var(--bg); border: 1px solid var(--border);
+      border-radius: 12px; padding: 18px 20px;
+    }
+    .outcome-card h3 { font-size: 11px; font-weight: 600; color: var(--text-4); text-transform: uppercase; letter-spacing: 0.06em; margin-bottom: 10px; }
+    .outcome-value { font-size: 20px; font-weight: 700; color: var(--text); margin-bottom: 4px; }
+    .outcome-notes { font-size: 13px; color: var(--text-3); }
 
-    /* Outcome panel */
-    .outcome-panel { margin: 0 28px 20px; background: white; border: 1px solid #e2e8f0; border-radius: 14px; padding: 16px 18px; }
-    .outcome-panel h3 { font-size: 11px; font-weight: 700; color: #94a3b8; text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 10px; }
-    .outcome-value { font-size: 20px; font-weight: 700; color: #1e293b; margin-bottom: 4px; }
-    .outcome-notes { font-size: 14px; color: #475569; }
+    /* ── Campaign view ── */
+    .camp-section { padding: 0; }
+    .camp-meta { background: var(--bg); border: 1px solid var(--border); border-radius: 12px; padding: 18px 20px; margin-bottom: 16px; }
+    .camp-meta-top { display: flex; align-items: flex-start; justify-content: space-between; margin-bottom: 14px; }
+    .camp-purpose { font-size: 13px; color: var(--text-2); line-height: 1.5; max-width: 500px; }
+    .camp-stats { display: flex; gap: 24px; }
+    .stat { text-align: right; }
+    .stat-val { font-size: 20px; font-weight: 700; color: var(--text); line-height: 1; }
+    .stat-lbl { font-size: 11px; color: var(--text-4); margin-top: 2px; }
+    .prog-wrap { background: var(--bg-hover); border-radius: 4px; height: 4px; overflow: hidden; }
+    .prog-fill { background: var(--accent); height: 100%; border-radius: 4px; transition: width 0.5s; }
+
+    .data-table { width: 100%; border-collapse: collapse; font-size: 13px; background: var(--bg); border: 1px solid var(--border); border-radius: 12px; overflow: hidden; }
+    .data-table th { background: var(--bg-sub); padding: 10px 16px; text-align: left; font-size: 11px; font-weight: 600; color: var(--text-3); text-transform: uppercase; letter-spacing: 0.05em; border-bottom: 1px solid var(--border); }
+    .data-table td { padding: 11px 16px; border-bottom: 1px solid var(--border); color: var(--text-2); }
+    .data-table tbody tr:last-child td { border-bottom: none; }
+    .data-table tbody tr:hover td { background: var(--bg-hover); cursor: pointer; }
   </style>
 </head>
 <body>
 
 <header>
   <div class="logo">
-    <span class="logo-icon">🔔</span>
-    <h1>Ava <span>Reminds</span></h1>
+    <div class="logo-mark">🔔</div>
+    <span class="logo-name">Ava <span>/ Reminds</span></span>
   </div>
-  <span class="badge-live">● Live</span>
+  <div class="header-right">
+    <div class="live-indicator"><span class="live-dot"></span> System live</div>
+    <button class="theme-toggle" id="theme-toggle" onclick="toggleTheme()" title="Toggle dark mode">
+      <svg id="theme-icon" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <path d="M21 12.79A9 9 0 1111.21 3 7 7 0 0021 12.79z"/>
+      </svg>
+    </button>
+  </div>
 </header>
 
-<div class="layout">
+<div class="shell">
 
-  <!-- Sidebar: call / campaign history -->
+  <!-- Sidebar -->
   <div class="sidebar">
-    <div class="sidebar-header">
-      <h2 id="sidebar-title">Recent Calls</h2>
+    <div class="sidebar-head">
       <div class="sidebar-tabs">
-        <button class="stab active" onclick="showSidebarTab('calls', this)">Calls</button>
-        <button class="stab" onclick="showSidebarTab('campaigns', this)">Campaigns</button>
+        <button class="stab active" onclick="showTab('calls', this)">Calls</button>
+        <button class="stab" onclick="showTab('campaigns', this)">Campaigns</button>
       </div>
     </div>
-    <div id="call-list">
-      <div class="empty-sidebar">No calls yet.<br>Make your first call →</div>
-    </div>
-    <div id="campaign-list" style="display:none">
-      <div class="empty-sidebar">No campaigns yet.<br>Use Bulk tab →</div>
+    <div class="sidebar-body">
+      <div id="call-list"><div class="empty-state"><p>No calls yet.<br>Start one →</p></div></div>
+      <div id="campaign-list" style="display:none"><div class="empty-state"><p>No campaigns yet.</p></div></div>
     </div>
   </div>
 
-  <!-- Main panel -->
-  <div class="panel">
+  <!-- Main -->
+  <div class="main">
 
-    <!-- Mode tabs -->
-    <div class="mode-tabs">
-      <button class="mtab active" onclick="setMode('single', this)">📞 Single Call</button>
-      <button class="mtab" onclick="setMode('bulk', this)">👥 Bulk Campaign</button>
+    <div class="main-topbar">
+      <button class="mode-btn active" onclick="setMode('single', this)">Single Call</button>
+      <button class="mode-btn" onclick="setMode('bulk', this)">Bulk Campaign</button>
     </div>
 
-    <!-- ── Single call form ── -->
-    <div class="new-call-card" id="single-panel">
+    <!-- Single call form -->
+    <div class="form-panel" id="single-panel">
+      <div class="panel-title">New outbound call</div>
 
-      <div class="contact-row">
+      <div class="two-col">
         <div class="field">
-          <label for="contact-name">Contact Name</label>
+          <label for="contact-name">Contact name</label>
           <input type="text" id="contact-name" placeholder="Sarah Miller" />
         </div>
         <div class="field">
-          <label for="contact-phone">Phone Number</label>
+          <label for="contact-phone">Phone number</label>
           <input type="tel" id="contact-phone" placeholder="+14155550100" />
         </div>
       </div>
 
-      <div class="purpose-block">
-        <label for="purpose">What's this call about?</label>
-        <textarea
-          id="purpose"
-          class="purpose-textarea"
-          placeholder="Describe what Ava should say and do on this call…"
-          oninput="onPurposeInput()"
-        ></textarea>
-        <div class="suggestions-row" id="suggestions"></div>
+      <div class="field">
+        <label for="purpose">Call purpose</label>
+        <textarea id="purpose" placeholder="Describe what Ava should deliver on this call…" oninput="onPurposeInput()"></textarea>
+        <div class="chips" id="chips-single"></div>
       </div>
 
-      <div class="schedule-row">
-        <label>Schedule for later:</label>
+      <div class="schedule-field">
+        <label>Schedule for later</label>
         <input type="datetime-local" id="schedule-time" />
-        <span class="clear-schedule" onclick="clearSchedule()">Clear</span>
+        <button class="text-btn" onclick="document.getElementById('schedule-time').value=''">Clear</button>
       </div>
 
-      <div class="call-action">
-        <span class="char-count" id="char-count"></span>
-        <button class="call-btn" id="call-btn" onclick="startCall()">
-          📞 Call Now
+      <div class="form-footer">
+        <span class="char-hint" id="char-count"></span>
+        <button class="btn-primary" id="call-btn" onclick="startCall()">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M22 16.92v3a2 2 0 01-2.18 2 19.79 19.79 0 01-8.63-3.07A19.5 19.5 0 013.07 9.81a19.79 19.79 0 01-3.07-8.68A2 2 0 012 0h3a2 2 0 012 1.72c.127 1.01.361 2.003.7 2.96a2 2 0 01-.45 2.11L6.09 7.91a16 16 0 006 6l1.06-1.06a2 2 0 012.11-.45c.957.339 1.95.573 2.96.7a2 2 0 011.72 2.02z"/></svg>
+          Call now
         </button>
       </div>
     </div>
 
-    <!-- ── Bulk campaign panel ── -->
-    <div class="bulk-card" id="bulk-panel">
-      <h2>Bulk Campaign</h2>
+    <!-- Bulk campaign form -->
+    <div class="form-panel" id="bulk-panel" style="display:none">
+      <div class="panel-title">New bulk campaign</div>
 
-      <div class="purpose-block">
-        <label for="bulk-purpose">What's this campaign about?</label>
-        <textarea
-          id="bulk-purpose"
-          class="purpose-textarea"
-          placeholder="Describe the message Ava will deliver to all contacts…"
-        ></textarea>
-        <div class="suggestions-row" id="bulk-suggestions"></div>
+      <div class="field" style="margin-bottom:14px">
+        <label for="bulk-purpose">Campaign message</label>
+        <textarea id="bulk-purpose" placeholder="What should Ava deliver to each contact?"></textarea>
+        <div class="chips" id="chips-bulk"></div>
       </div>
 
-      <!-- CSV drop zone -->
-      <div>
-        <div class="drop-zone" id="drop-zone" onclick="document.getElementById('csv-input').click()"
-             ondragover="onDragOver(event)" ondragleave="onDragLeave(event)" ondrop="onDrop(event)">
-          <strong>📂 Drop CSV here or click to upload</strong>
-          <p>Columns: <code>name</code> and <code>phone</code></p>
-          <input type="file" id="csv-input" accept=".csv,text/csv" onchange="onFileSelect(event)" />
-        </div>
-        <div class="csv-hint" style="margin-top:7px">
-          CSV format: <code>name,phone</code> — one contact per row. Phone numbers in E.164 format e.g. <code>+14155550100</code>
-        </div>
+      <div class="drop-zone" id="drop-zone"
+           onclick="document.getElementById('csv-input').click()"
+           ondragover="onDragOver(event)" ondragleave="onDragLeave(event)" ondrop="onDrop(event)">
+        <div class="dz-title">Upload contact list</div>
+        <div class="dz-sub">Drop a CSV or click to browse — columns: <code>name</code>, <code>phone</code></div>
+        <input type="file" id="csv-input" accept=".csv,text/csv" onchange="onFileSelect(event)" />
       </div>
 
-      <!-- Contact preview table -->
-      <div id="preview-section" style="display:none">
-        <div class="preview-wrap">
+      <div id="preview-section" style="display:none; margin-top:12px">
+        <div class="preview-table-wrap">
           <table>
             <thead><tr><th>#</th><th>Name</th><th>Phone</th><th></th></tr></thead>
             <tbody id="preview-body"></tbody>
@@ -272,448 +401,374 @@
         </div>
       </div>
 
-      <div class="schedule-row">
-        <label>Schedule for later:</label>
+      <div class="schedule-field" style="margin-top:14px">
+        <label>Schedule for later</label>
         <input type="datetime-local" id="bulk-schedule-time" />
-        <span class="clear-schedule" onclick="document.getElementById('bulk-schedule-time').value=''">Clear</span>
+        <button class="text-btn" onclick="document.getElementById('bulk-schedule-time').value=''">Clear</button>
       </div>
 
-      <div class="bulk-action">
+      <div class="bulk-footer">
         <span class="contact-count" id="contact-count">No contacts loaded</span>
-        <button class="call-btn" id="bulk-btn" onclick="startCampaign()">
-          🚀 Send Campaign
-        </button>
+        <button class="btn-primary" id="bulk-btn" onclick="startCampaign()">Send campaign</button>
       </div>
     </div>
 
     <div class="status-bar" id="status-bar"></div>
 
-    <!-- Transcript / campaign view -->
-    <div class="transcript-wrap" id="transcript-wrap">
+    <!-- Transcript / Campaign view -->
+    <div class="transcript-section" id="transcript-section">
       <div class="empty-transcript">
-        <div class="empty-icon">🎙️</div>
-        <div class="empty-text">Transcript will appear here during the call</div>
+        <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/></svg>
+        <p>Transcript will appear here once a call is in progress.</p>
       </div>
     </div>
 
-    <div id="outcome-panel"></div>
+    <div id="outcome-area"></div>
 
   </div>
 </div>
 
 <script>
-  // ── Suggestion templates ──────────────────────────────────────────────
-  const SUGGESTIONS = [
-    { label: "💅 Salon",       text: `Remind [NAME] of their [hair/nails/massage] appointment on [DAY] at [TIME] at [SALON NAME]. Ask them to confirm or call [NUMBER] to reschedule.` },
-    { label: "🎉 Party invite", text: `Invite [NAME] to [HOST]'s [birthday party / dinner / gathering] on [DATE] at [TIME] at [LOCATION]. Ask if they'll be joining and let them know to RSVP by [DATE].` },
-    { label: "📚 Class",       text: `Remind [NAME] that their [yoga / guitar / tutoring] session is on [DAY] at [TIME] with [TEACHER] at [LOCATION]. Ask them to confirm attendance.` },
-    { label: "🏥 Medical",     text: `Remind [NAME] of their appointment with [DR. NAME] on [DAY] at [TIME] at [CLINIC]. Ask them to confirm or call [NUMBER] to reschedule at least 24 hours in advance.` },
-    { label: "💪 Gym / PT",    text: `Remind [NAME] of their personal training session with [TRAINER] on [DAY] at [TIME]. Ask them to confirm they'll be there.` },
-    { label: "📦 Delivery",    text: `Let [NAME] know their package is scheduled for delivery on [DATE] between [TIME WINDOW]. Ask if someone will be home, and if not, where to leave it.` },
-    { label: "🎂 Birthday",    text: `Call [NAME] to wish them a happy birthday from [YOUR NAME / TEAM]. Keep it warm and genuine — this is a personal call, not a sales pitch.` },
-    { label: "✏️ Custom",      text: `` },
+  // ── Theme ────────────────────────────────────────────────────────────
+  const SUN = `<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/></svg>`;
+  const MOON = `<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 12.79A9 9 0 1111.21 3 7 7 0 0021 12.79z"/></svg>`;
+
+  function applyTheme(dark) {
+    document.documentElement.setAttribute('data-theme', dark ? 'dark' : 'light');
+    document.getElementById('theme-icon').innerHTML = dark ? SUN.replace(/^<svg[^>]*>/, '').replace('</svg>','') : MOON.replace(/^<svg[^>]*>/, '').replace('</svg>','');
+    localStorage.setItem('theme', dark ? 'dark' : 'light');
+  }
+  function toggleTheme() { applyTheme(document.documentElement.getAttribute('data-theme') !== 'dark'); }
+
+  // Restore saved preference or use system preference
+  (function() {
+    const saved = localStorage.getItem('theme');
+    const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+    applyTheme(saved ? saved === 'dark' : prefersDark);
+  })();
+
+  const TEMPLATES = [
+    { label: "Salon appointment",    text: `Remind [NAME] of their appointment on [DAY] at [TIME] at [SALON]. Ask them to confirm or call [NUMBER] to reschedule.` },
+    { label: "Event invite",         text: `Invite [NAME] to [HOST]'s [event] on [DATE] at [TIME] at [LOCATION]. Ask if they'll be joining.` },
+    { label: "Class / lesson",       text: `Remind [NAME] that their [class] session is on [DAY] at [TIME]. Ask them to confirm attendance.` },
+    { label: "Medical appointment",  text: `Remind [NAME] of their appointment with [DR. NAME] on [DAY] at [TIME]. Ask them to confirm or call [NUMBER] to reschedule.` },
+    { label: "Personal training",    text: `Remind [NAME] of their PT session with [TRAINER] on [DAY] at [TIME]. Ask them to confirm.` },
+    { label: "Package delivery",     text: `Let [NAME] know their package arrives on [DATE] between [TIME WINDOW]. Ask if someone will be home.` },
+    { label: "Custom",               text: `` },
   ];
 
-  let activeSuggestion = null;
-  let bulkActiveSuggestion = null;
-  let internalCallId = null;
-  let pollTimer = null;
-  let contacts = [];   // bulk contacts array
-  let currentMode = 'single';
-  let currentSidebarTab = 'calls';
+  let activeSingle = null, activeBulk = null;
+  let internalCallId = null, pollTimer = null;
+  let contacts = [];
 
-  // Render suggestion buttons for single + bulk
-  function renderSuggestions(containerId, targetId, activeVar, setActive) {
+  function buildChips(containerId, targetId, getA, setA) {
     const el = document.getElementById(containerId);
-    SUGGESTIONS.forEach((s, i) => {
+    TEMPLATES.forEach((t, i) => {
       const btn = document.createElement('button');
-      btn.className = 'suggestion-btn';
-      btn.textContent = s.label;
+      btn.className = 'chip'; btn.textContent = t.label;
       btn.onclick = () => {
         const ta = document.getElementById(targetId);
-        const prev = setActive(i, btn);
-        if (prev === i) { ta.value = ''; return; }
-        ta.value = s.text;
-        ta.focus();
+        const prev = getA();
+        document.querySelectorAll(`#${containerId} .chip`).forEach(b => b.classList.remove('active'));
+        if (prev !== i) { btn.classList.add('active'); setA(i); ta.value = t.text; ta.focus(); }
+        else { setA(null); ta.value = ''; }
+        if (containerId === 'chips-single') updateCharCount();
       };
       el.appendChild(btn);
     });
   }
-
-  // Simple suggestion state for single
-  renderSuggestions('suggestions', 'purpose', null, (i, btn) => {
-    const prev = activeSuggestion;
-    document.querySelectorAll('#suggestions .suggestion-btn').forEach(b => b.classList.remove('active'));
-    if (prev !== i) { btn.classList.add('active'); activeSuggestion = i; } else { activeSuggestion = null; }
-    updateCharCount();
-    return prev;
-  });
-
-  // For bulk
-  renderSuggestions('bulk-suggestions', 'bulk-purpose', null, (i, btn) => {
-    const prev = bulkActiveSuggestion;
-    document.querySelectorAll('#bulk-suggestions .suggestion-btn').forEach(b => b.classList.remove('active'));
-    if (prev !== i) { btn.classList.add('active'); bulkActiveSuggestion = i; } else { bulkActiveSuggestion = null; }
-    return prev;
-  });
+  buildChips('chips-single', 'purpose',      () => activeSingle, v => { activeSingle = v; updateCharCount(); });
+  buildChips('chips-bulk',   'bulk-purpose', () => activeBulk,   v => { activeBulk = v; });
 
   function onPurposeInput() {
-    document.querySelectorAll('#suggestions .suggestion-btn').forEach(b => b.classList.remove('active'));
-    activeSuggestion = null;
-    updateCharCount();
+    document.querySelectorAll('#chips-single .chip').forEach(b => b.classList.remove('active'));
+    activeSingle = null; updateCharCount();
   }
-
   function updateCharCount() {
-    const len = document.getElementById('purpose').value.length;
-    document.getElementById('char-count').textContent = len > 0 ? `${len} chars` : '';
+    const n = document.getElementById('purpose').value.length;
+    document.getElementById('char-count').textContent = n ? `${n} chars` : '';
   }
 
-  function clearSchedule() {
-    document.getElementById('schedule-time').value = '';
-  }
-
-  // ── Mode switching ──────────────────────────────────────────────────
+  // ── Mode ─────────────────────────────────────────────────────────────
   function setMode(mode, btn) {
-    currentMode = mode;
-    document.querySelectorAll('.mtab').forEach(b => b.classList.remove('active'));
+    document.querySelectorAll('.mode-btn').forEach(b => b.classList.remove('active'));
     btn.classList.add('active');
     document.getElementById('single-panel').style.display = mode === 'single' ? '' : 'none';
-    const bulk = document.getElementById('bulk-panel');
-    bulk.style.display = mode === 'bulk' ? 'flex' : 'none';
-    bulk.classList.toggle('visible', mode === 'bulk');
-    clearMainView();
+    document.getElementById('bulk-panel').style.display   = mode === 'bulk'   ? '' : 'none';
+    clearMain();
   }
 
-  // ── Sidebar tab switching ───────────────────────────────────────────
-  function showSidebarTab(tab, btn) {
-    currentSidebarTab = tab;
-    document.querySelectorAll('.stab').forEach(b => b.classList.remove('active'));
-    btn.classList.add('active');
-    document.getElementById('call-list').style.display = tab === 'calls' ? '' : 'none';
+  // ── Sidebar tabs ─────────────────────────────────────────────────────
+  function showTab(tab, btn) {
+    document.querySelectorAll('.stab').forEach(b => b.classList.remove('active')); btn.classList.add('active');
+    document.getElementById('call-list').style.display     = tab === 'calls'     ? '' : 'none';
     document.getElementById('campaign-list').style.display = tab === 'campaigns' ? '' : 'none';
-    document.getElementById('sidebar-title').textContent = tab === 'calls' ? 'Recent Calls' : 'Campaigns';
-    if (tab === 'campaigns') loadCampaignHistory();
+    if (tab === 'campaigns') loadCampaigns();
   }
 
-  // ── CSV handling ────────────────────────────────────────────────────
+  // ── CSV ──────────────────────────────────────────────────────────────
   function onDragOver(e) { e.preventDefault(); document.getElementById('drop-zone').classList.add('drag-over'); }
   function onDragLeave()  { document.getElementById('drop-zone').classList.remove('drag-over'); }
-  function onDrop(e) {
-    e.preventDefault();
-    document.getElementById('drop-zone').classList.remove('drag-over');
-    const file = e.dataTransfer.files[0];
-    if (file) parseCSV(file);
-  }
-  function onFileSelect(e) {
-    const file = e.target.files[0];
-    if (file) parseCSV(file);
-  }
+  function onDrop(e) { e.preventDefault(); document.getElementById('drop-zone').classList.remove('drag-over'); const f = e.dataTransfer.files[0]; if (f) parseCSV(f); }
+  function onFileSelect(e) { const f = e.target.files[0]; if (f) parseCSV(f); }
 
   function parseCSV(file) {
-    const reader = new FileReader();
-    reader.onload = (e) => {
+    new FileReader().onload = e => {
       const lines = e.target.result.trim().split('\n').map(l => l.trim()).filter(Boolean);
       contacts = [];
       const start = lines[0].toLowerCase().includes('name') ? 1 : 0;
       for (let i = start; i < lines.length; i++) {
-        const cols = lines[i].split(',').map(c => c.trim().replace(/^"|"$/g, ''));
-        if (cols.length >= 2 && cols[1]) {
-          contacts.push({ name: cols[0], phone: cols[1] });
-        }
+        const cols = lines[i].split(',').map(c => c.trim().replace(/^"|"$/g,''));
+        if (cols.length >= 2 && cols[1]) contacts.push({ name: cols[0], phone: cols[1] });
       }
-      renderContactPreview();
+      renderPreview();
     };
-    reader.readAsText(file);
+    const r = new FileReader(); r.onload = e => {
+      const lines = e.target.result.trim().split('\n').map(l => l.trim()).filter(Boolean);
+      contacts = [];
+      const start = lines[0].toLowerCase().includes('name') ? 1 : 0;
+      for (let i = start; i < lines.length; i++) {
+        const cols = lines[i].split(',').map(c => c.trim().replace(/^"|"$/g,''));
+        if (cols.length >= 2 && cols[1]) contacts.push({ name: cols[0], phone: cols[1] });
+      }
+      renderPreview();
+    };
+    r.readAsText(file);
   }
 
-  function renderContactPreview() {
-    const body = document.getElementById('preview-body');
-    body.innerHTML = contacts.map((c, i) => `
-      <tr>
-        <td>${i + 1}</td>
-        <td>${escHtml(c.name)}</td>
-        <td>${escHtml(c.phone)}</td>
-        <td><span class="remove-row" onclick="removeContact(${i})">✕</span></td>
-      </tr>`).join('');
+  function renderPreview() {
+    document.getElementById('preview-body').innerHTML = contacts.map((c, i) => `
+      <tr><td style="color:var(--text-4)">${i+1}</td><td>${esc(c.name)}</td><td>${esc(c.phone)}</td>
+      <td><span class="remove-row" onclick="contacts.splice(${i},1);renderPreview()">✕</span></td></tr>`).join('');
     document.getElementById('preview-section').style.display = contacts.length ? '' : 'none';
-    document.getElementById('contact-count').textContent =
-      contacts.length ? `${contacts.length} contact${contacts.length > 1 ? 's' : ''} loaded` : 'No contacts loaded';
+    document.getElementById('contact-count').textContent = contacts.length
+      ? `${contacts.length} contact${contacts.length !== 1 ? 's' : ''} loaded`
+      : 'No contacts loaded';
   }
 
-  function removeContact(i) {
-    contacts.splice(i, 1);
-    renderContactPreview();
-  }
-
-  // ── Start single call ───────────────────────────────────────────────
+  // ── Single call ──────────────────────────────────────────────────────
   async function startCall() {
     const name    = document.getElementById('contact-name').value.trim();
     const phone   = document.getElementById('contact-phone').value.trim();
     const purpose = document.getElementById('purpose').value.trim();
     const schedRaw = document.getElementById('schedule-time').value;
     const scheduled_at = schedRaw ? new Date(schedRaw).toISOString() : null;
-
-    if (!name)    { alert('Enter the contact\'s name'); return; }
-    if (!phone)   { alert('Enter a phone number (e.g. +14155550100)'); return; }
-    if (!purpose) { alert('Describe what this call is about'); return; }
+    if (!name || !phone || !purpose) { highlight([!name && 'contact-name', !phone && 'contact-phone', !purpose && 'purpose'].filter(Boolean)); return; }
 
     const btn = document.getElementById('call-btn');
-    btn.disabled = true;
-    btn.textContent = '⏳ Sending…';
-
-    clearMainView();
-    internalCallId = null;
+    btn.disabled = true; btn.textContent = 'Initiating…';
+    clearMain(); internalCallId = null;
 
     try {
-      const res = await fetch('/api/call/start', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ contact_name: name, phone_number: phone, purpose, scheduled_at }),
-      });
-      if (!res.ok) {
-        const err = await res.json();
-        throw new Error(err.detail || 'Failed to start call');
-      }
+      const res = await fetch('/api/call/start', { method:'POST', headers:{'Content-Type':'application/json'},
+        body: JSON.stringify({ contact_name: name, phone_number: phone, purpose, scheduled_at }) });
+      if (!res.ok) throw new Error((await res.json()).detail || 'Request failed');
       const data = await res.json();
 
       if (data.status === 'scheduled') {
-        setStatus(`📅 Call scheduled for ${new Date(data.scheduled_at).toLocaleString()} — Ava will call automatically.`, 'info');
-        btn.textContent = '📞 Call Now';
-        btn.disabled = false;
-        loadCallHistory();
-        return;
+        setStatus(`Call scheduled for ${new Date(data.scheduled_at).toLocaleString()}`, 'info');
+        btn.disabled = false; btn.innerHTML = callIcon() + 'Call now';
+        loadHistory(); return;
       }
 
       internalCallId = data.internal_call_id;
-      setStatus(`📞 Calling ${name}…  ·  ${data.vapi_call_id.slice(0,8)}`, 'active');
-      btn.textContent = '📞 In progress…';
-
-      renderTurns([{ speaker: 'agent', message: data.opening_line }]);
+      setStatus(`Calling ${name}…`, 'active');
+      btn.textContent = 'In progress…';
+      renderTurns([{ speaker: 'agent', message: data.opening_line }], name);
       pollTimer = setInterval(poll, 2000);
     } catch (e) {
-      setStatus(`Error: ${e.message}`, 'error');
-      btn.disabled = false;
-      btn.textContent = '📞 Call Now';
+      setStatus(e.message, 'error');
+      btn.disabled = false; btn.innerHTML = callIcon() + 'Call now';
     }
   }
 
-  // ── Start bulk campaign ─────────────────────────────────────────────
+  function callIcon() { return `<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" style="margin-right:2px"><path d="M22 16.92v3a2 2 0 01-2.18 2 19.79 19.79 0 01-8.63-3.07A19.5 19.5 0 013.07 9.81a19.79 19.79 0 01-3.07-8.68A2 2 0 012 0h3a2 2 0 012 1.72c.127 1.01.361 2.003.7 2.96a2 2 0 01-.45 2.11L6.09 7.91a16 16 0 006 6l1.06-1.06a2 2 0 012.11-.45c.957.339 1.95.573 2.96.7a2 2 0 011.72 2.02z"/></svg>`; }
+
+  // ── Campaign ─────────────────────────────────────────────────────────
   async function startCampaign() {
     const purpose = document.getElementById('bulk-purpose').value.trim();
     const schedRaw = document.getElementById('bulk-schedule-time').value;
     const scheduled_at = schedRaw ? new Date(schedRaw).toISOString() : null;
-
-    if (!purpose)          { alert('Describe what this campaign is about'); return; }
-    if (!contacts.length)  { alert('Upload a CSV with contacts first'); return; }
+    if (!purpose || !contacts.length) { highlight([!purpose && 'bulk-purpose', !contacts.length && 'drop-zone'].filter(Boolean)); return; }
 
     const btn = document.getElementById('bulk-btn');
-    btn.disabled = true;
-    btn.textContent = '⏳ Sending…';
-
+    btn.disabled = true; btn.textContent = 'Sending…';
     try {
-      const res = await fetch('/api/campaign/start', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ purpose, contacts, scheduled_at }),
-      });
-      if (!res.ok) {
-        const err = await res.json();
-        throw new Error(err.detail || 'Failed to start campaign');
-      }
+      const res = await fetch('/api/campaign/start', { method:'POST', headers:{'Content-Type':'application/json'},
+        body: JSON.stringify({ purpose, contacts, scheduled_at }) });
+      if (!res.ok) throw new Error((await res.json()).detail || 'Request failed');
       const data = await res.json();
-
       if (data.status === 'scheduled') {
-        setStatus(`📅 Campaign scheduled for ${new Date(data.scheduled_at).toLocaleString()} — ${data.total} contacts will be called automatically.`, 'info');
+        setStatus(`Campaign scheduled — ${data.total} contacts will be called on ${new Date(data.scheduled_at).toLocaleString()}`, 'info');
       } else {
-        setStatus(`🚀 Campaign started — calling ${data.total} contacts…`, 'active');
-        // Switch sidebar to campaigns and view it
-        showSidebarTab('campaigns', document.querySelector('.stab:last-child'));
-        setTimeout(() => viewCampaign(data.campaign_id), 500);
+        setStatus(`Campaign live — contacting ${data.total} people`, 'active');
+        showTab('campaigns', document.querySelector('.stab:nth-child(2)'));
+        setTimeout(() => viewCampaign(data.campaign_id), 600);
       }
-
-      contacts = [];
-      renderContactPreview();
-      loadCampaignHistory();
-    } catch (e) {
-      setStatus(`Error: ${e.message}`, 'error');
-    } finally {
-      btn.disabled = false;
-      btn.textContent = '🚀 Send Campaign';
-    }
+      contacts = []; renderPreview(); loadCampaigns();
+    } catch (e) { setStatus(e.message, 'error'); }
+    finally { btn.disabled = false; btn.textContent = 'Send campaign'; }
   }
 
-  // ── Poll single call transcript ─────────────────────────────────────
+  // ── Poll ─────────────────────────────────────────────────────────────
   async function poll() {
     if (!internalCallId) return;
     try {
       const data = await fetch(`/api/call/${internalCallId}/log`).then(r => r.json());
-      renderTurns(data.turns);
+      renderTurns(data.turns, data.call.contact_name);
       if (data.call.status !== 'in_progress') {
         clearInterval(pollTimer); pollTimer = null;
         const btn = document.getElementById('call-btn');
-        btn.disabled = false;
-        btn.textContent = '📞 Call Now';
-        const oc = data.call.outcome || 'completed';
-        setStatus(`Call ended · ${outcomeLabel(oc)}`, 'done');
-        renderOutcome(data.call);
-        loadCallHistory();
+        btn.disabled = false; btn.innerHTML = callIcon() + 'Call now';
+        setStatus(`Call ended — ${label(data.call.outcome || 'completed')}`, 'done');
+        renderOutcome(data.call); loadHistory();
       }
-    } catch (_) {}
+    } catch(_) {}
   }
 
-  // ── View a campaign ─────────────────────────────────────────────────
-  async function viewCampaign(campaignId) {
+  // ── Campaign view ────────────────────────────────────────────────────
+  async function viewCampaign(id) {
     if (pollTimer) { clearInterval(pollTimer); pollTimer = null; }
-    const data = await fetch(`/api/campaign/${campaignId}`).then(r => r.json());
-    const c = data.campaign;
-    const calls = data.calls;
+    const { campaign: c, calls } = await fetch(`/api/campaign/${id}`).then(r => r.json());
     const pct = c.total > 0 ? Math.round((c.completed / c.total) * 100) : 0;
 
-    const wrap = document.getElementById('transcript-wrap');
-    wrap.innerHTML = `
-      <div class="campaign-view" style="padding:0">
-        <div class="campaign-header">
-          <h3>Campaign</h3>
-          <span class="outcome-badge oc-${c.status}">${outcomeLabel(c.status)}</span>
+    document.getElementById('transcript-section').innerHTML = `
+      <div class="camp-section">
+        <div class="camp-meta">
+          <div class="camp-meta-top">
+            <div>
+              <div style="display:flex;align-items:center;gap:8px;margin-bottom:6px">
+                <span class="badge oc-${c.status}">${label(c.status)}</span>
+                <span style="font-size:12px;color:var(--text-4)">${new Date(c.created_at).toLocaleString()}</span>
+              </div>
+              <div class="camp-purpose">${esc(c.purpose)}</div>
+            </div>
+            <div class="camp-stats">
+              <div class="stat"><div class="stat-val">${c.completed}</div><div class="stat-lbl">Completed</div></div>
+              <div class="stat"><div class="stat-val">${c.total}</div><div class="stat-lbl">Total</div></div>
+            </div>
+          </div>
+          <div class="prog-wrap"><div class="prog-fill" style="width:${pct}%"></div></div>
+          <div style="font-size:11px;color:var(--text-4);margin-top:5px">${pct}% complete</div>
         </div>
-        <div style="font-size:13px;color:#64748b;margin-bottom:12px">${escHtml(c.purpose)}</div>
-        <div class="progress-bar-wrap"><div class="progress-bar-fill" style="width:${pct}%"></div></div>
-        <div class="progress-text">${c.completed} / ${c.total} calls completed (${pct}%)</div>
-        <table class="campaign-calls-table">
-          <thead><tr><th>Contact</th><th>Phone</th><th>Status</th><th>Outcome</th></tr></thead>
-          <tbody>
-            ${calls.map(cl => `
-              <tr onclick="viewCall('${cl.id}');setMode('single',document.querySelector('.mtab'))">
-                <td>${escHtml(cl.contact_name)}</td>
-                <td>${escHtml(cl.contact_phone)}</td>
-                <td><span class="outcome-badge oc-${cl.status}">${outcomeLabel(cl.status)}</span></td>
-                <td>${cl.outcome ? `<span class="outcome-badge oc-${cl.outcome}">${outcomeLabel(cl.outcome)}</span>` : '—'}</td>
-              </tr>`).join('')}
+        <table class="data-table">
+          <thead><tr><th>Contact</th><th>Phone</th><th>Status</th><th>Outcome</th><th>Notes</th></tr></thead>
+          <tbody>${calls.map(cl => `
+            <tr onclick="viewCall('${cl.id}');document.querySelector('.mode-btn').click()">
+              <td style="font-weight:500">${esc(cl.contact_name)}</td>
+              <td style="color:var(--text-3)">${esc(cl.contact_phone)}</td>
+              <td><span class="badge oc-${cl.status}">${label(cl.status)}</span></td>
+              <td>${cl.outcome ? `<span class="badge oc-${cl.outcome}">${label(cl.outcome)}</span>` : '<span style="color:var(--text-4)">—</span>'}</td>
+              <td style="color:var(--text-3);font-size:12px">${esc(cl.notes || '')}</td>
+            </tr>`).join('')}
           </tbody>
         </table>
       </div>`;
-
-    document.getElementById('outcome-panel').innerHTML = '';
-
-    // Poll if still running
-    if (c.status === 'running') {
-      clearInterval(pollTimer);
-      pollTimer = setInterval(() => viewCampaign(campaignId), 5000);
-    }
+    document.getElementById('outcome-area').innerHTML = '';
+    if (c.status === 'running') { clearInterval(pollTimer); pollTimer = setInterval(() => viewCampaign(id), 5000); }
   }
 
-  // ── Render helpers ──────────────────────────────────────────────────
-  function renderTurns(turns) {
-    if (!turns || !turns.length) return;
-    const wrap = document.getElementById('transcript-wrap');
-    wrap.innerHTML = `<div class="transcript-title">Live Transcript</div>` +
+  // ── Render helpers ───────────────────────────────────────────────────
+  function renderTurns(turns, contactName) {
+    if (!turns?.length) return;
+    const name = contactName || document.getElementById('contact-name').value.trim() || 'Contact';
+    document.getElementById('transcript-section').innerHTML =
+      `<div class="section-header"><span class="section-title">Transcript</span></div>` +
       turns.map(t => `
         <div class="turn turn-${t.speaker}">
-          <div class="turn-label">${t.speaker === 'agent' ? '🔔 Ava' : '👤 ' + escHtml(document.getElementById('contact-name').value.trim() || 'Contact')}</div>
-          <div class="bubble">${escHtml(t.message)}</div>
+          <div class="turn-speaker">${t.speaker === 'agent' ? 'Ava' : esc(name)}</div>
+          <div class="bubble">${esc(t.message)}</div>
         </div>`).join('');
-    wrap.scrollTop = wrap.scrollHeight;
+    const s = document.getElementById('transcript-section'); s.scrollTop = s.scrollHeight;
   }
 
   function renderOutcome(call) {
-    const emoji = { confirmed:'✅', declined:'❌', callback_requested:'📞', wrong_number:'❓', completed:'💬' };
+    const icons = { confirmed:'✓', declined:'✗', callback_requested:'↩', wrong_number:'?', completed:'·' };
     const oc = call.outcome || 'completed';
-    document.getElementById('outcome-panel').innerHTML = `
-      <div class="outcome-panel">
+    document.getElementById('outcome-area').innerHTML = `
+      <div class="outcome-card">
         <h3>Outcome</h3>
-        <div class="outcome-value">${emoji[oc] || '💬'} ${outcomeLabel(oc)}</div>
-        ${call.notes ? `<div class="outcome-notes">${escHtml(call.notes)}</div>` : ''}
+        <div class="outcome-value"><span class="badge oc-${oc}" style="font-size:14px;padding:4px 10px">${label(oc)}</span></div>
+        ${call.notes ? `<div class="outcome-notes" style="margin-top:8px">${esc(call.notes)}</div>` : ''}
       </div>`;
   }
 
-  function outcomeLabel(s) {
-    return {
-      confirmed: 'Confirmed', declined: 'Declined', callback_requested: 'Callback Requested',
-      wrong_number: 'Wrong Number', completed: 'Completed', in_progress: 'In Progress',
-      scheduled: 'Scheduled', pending: 'Pending', running: 'Running', failed: 'Failed',
-    }[s] || s;
+  function label(s) {
+    return { confirmed:'Confirmed', declined:'Declined', callback_requested:'Callback requested',
+             wrong_number:'Wrong number', completed:'Completed', in_progress:'In progress',
+             scheduled:'Scheduled', pending:'Pending', running:'Running', failed:'Failed' }[s] || s;
   }
 
-  function clearMainView() {
+  function clearMain() {
     if (pollTimer) { clearInterval(pollTimer); pollTimer = null; }
-    document.getElementById('transcript-wrap').innerHTML = `
+    document.getElementById('transcript-section').innerHTML = `
       <div class="empty-transcript">
-        <div class="empty-icon">📞</div>
-        <div class="empty-text">Connecting…</div>
+        <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/></svg>
+        <p>Transcript will appear here once a call is in progress.</p>
       </div>`;
-    document.getElementById('outcome-panel').innerHTML = '';
+    document.getElementById('outcome-area').innerHTML = '';
     document.getElementById('status-bar').className = 'status-bar';
-  }
-
-  function escHtml(s) {
-    if (!s) return '';
-    return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
-  }
-
-  // ── Call history sidebar ────────────────────────────────────────────
-  async function loadCallHistory() {
-    const data = await fetch('/api/calls').then(r => r.json());
-    const el = document.getElementById('call-list');
-    if (!data.length) {
-      el.innerHTML = '<div class="empty-sidebar">No calls yet.<br>Make your first call →</div>';
-      return;
-    }
-    el.innerHTML = data.map(c => {
-      const oc = c.status === 'in_progress' ? 'in_progress' : (c.status === 'scheduled' ? 'scheduled' : (c.outcome || 'completed'));
-      const badge = `<span class="outcome-badge oc-${oc}">${outcomeLabel(oc)}</span>`;
-      const time = (c.started_at || c.scheduled_at || '').slice(11, 16);
-      const date = (c.started_at || c.scheduled_at || '').slice(0, 10);
-      return `<div class="call-item${c.id === internalCallId ? ' active' : ''}" onclick="viewCall('${c.id}')">
-        <div class="call-name">${escHtml(c.contact_name)} ${badge}</div>
-        <div class="call-purpose-preview">${escHtml(c.purpose || '')}</div>
-        <div class="call-time">${date} · ${time}</div>
-      </div>`;
-    }).join('');
-  }
-
-  async function loadCampaignHistory() {
-    const data = await fetch('/api/campaigns').then(r => r.json());
-    const el = document.getElementById('campaign-list');
-    if (!data.length) {
-      el.innerHTML = '<div class="empty-sidebar">No campaigns yet.<br>Use Bulk tab →</div>';
-      return;
-    }
-    el.innerHTML = data.map(c => {
-      const pct = c.total > 0 ? Math.round((c.completed / c.total) * 100) : 0;
-      const badge = `<span class="outcome-badge oc-${c.status}">${outcomeLabel(c.status)}</span>`;
-      return `<div class="call-item" onclick="viewCampaign('${c.id}')">
-        <div class="call-name">${badge} ${c.total} contacts</div>
-        <div class="call-purpose-preview">${escHtml(c.purpose)}</div>
-        <div class="call-time">${c.completed}/${c.total} completed · ${pct}%</div>
-      </div>`;
-    }).join('');
-  }
-
-  async function viewCall(callId) {
-    if (pollTimer) { clearInterval(pollTimer); pollTimer = null; }
-    internalCallId = callId;
-    const data = await fetch(`/api/call/${callId}/log`).then(r => r.json());
-    document.getElementById('contact-name').value = data.call.contact_name;
-    renderTurns(data.turns);
-    if (data.call.status !== 'in_progress' && data.call.outcome) {
-      renderOutcome(data.call);
-    }
-    const oc = data.call.outcome || data.call.status;
-    setStatus(`Viewing · ${data.call.contact_name} · ${outcomeLabel(oc)}`,
-              data.call.status === 'in_progress' ? 'active' : 'done');
-    document.querySelectorAll('.call-item').forEach(el => {
-      el.classList.toggle('active', el.getAttribute('onclick')?.includes(callId));
-    });
   }
 
   function setStatus(msg, cls) {
     const el = document.getElementById('status-bar');
-    el.textContent = msg;
-    el.className = `status-bar show ${cls}`;
+    el.textContent = msg; el.className = `status-bar show ${cls}`;
   }
 
-  // ── Init ─────────────────────────────────────────────────────────────
-  loadCallHistory();
+  function highlight(ids) {
+    ids.forEach(id => {
+      const el = document.getElementById(id);
+      if (!el) return;
+      el.style.borderColor = '#ef4444';
+      setTimeout(() => el.style.borderColor = '', 1800);
+      if (ids[0] === id) el.focus?.();
+    });
+  }
+
+  function esc(s) { return s ? String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;') : ''; }
+
+  // ── History ──────────────────────────────────────────────────────────
+  async function loadHistory() {
+    const data = await fetch('/api/calls').then(r => r.json());
+    const el = document.getElementById('call-list');
+    if (!data.length) { el.innerHTML = '<div class="empty-state"><p>No calls yet.<br>Start one →</p></div>'; return; }
+    el.innerHTML = data.map(c => {
+      const oc = c.status === 'in_progress' ? 'in_progress' : c.status === 'scheduled' ? 'scheduled' : (c.outcome || 'completed');
+      const ts = (c.started_at || c.scheduled_at || '').replace('T',' ').slice(0,16);
+      return `<div class="history-item${c.id === internalCallId ? ' active':''}" onclick="viewCall('${c.id}')">
+        <div class="hi-top"><span class="hi-name">${esc(c.contact_name)}</span><span class="hi-time">${ts}</span></div>
+        <div class="hi-purpose">${esc(c.purpose)}</div>
+        <span class="badge oc-${oc}">${label(oc)}</span>
+      </div>`;
+    }).join('');
+  }
+
+  async function loadCampaigns() {
+    const data = await fetch('/api/campaigns').then(r => r.json());
+    const el = document.getElementById('campaign-list');
+    if (!data.length) { el.innerHTML = '<div class="empty-state"><p>No campaigns yet.</p></div>'; return; }
+    el.innerHTML = data.map(c => {
+      const pct = c.total ? Math.round((c.completed/c.total)*100) : 0;
+      return `<div class="history-item" onclick="viewCampaign('${c.id}')">
+        <div class="hi-top"><span class="hi-name">${c.total} contacts</span><span class="hi-time">${pct}%</span></div>
+        <div class="hi-purpose">${esc(c.purpose)}</div>
+        <span class="badge oc-${c.status}">${label(c.status)}</span>
+      </div>`;
+    }).join('');
+  }
+
+  async function viewCall(id) {
+    if (pollTimer) { clearInterval(pollTimer); pollTimer = null; }
+    internalCallId = id;
+    const { call, turns } = await fetch(`/api/call/${id}/log`).then(r => r.json());
+    document.getElementById('contact-name').value = call.contact_name;
+    renderTurns(turns, call.contact_name);
+    if (call.outcome) renderOutcome(call);
+    setStatus(`${call.contact_name} · ${label(call.outcome || call.status)}`, call.status === 'in_progress' ? 'active' : 'done');
+    document.querySelectorAll('.history-item').forEach(el => el.classList.toggle('active', el.getAttribute('onclick')?.includes(id)));
+  }
+
+  loadHistory();
 </script>
 </body>
 </html>
