@@ -3,204 +3,282 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>PayFlow AI</title>
+  <title>Ava Reminders</title>
   <style>
     * { box-sizing: border-box; margin: 0; padding: 0; }
-    body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; background: #f1f5f9; color: #1e293b; }
+    body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; background: #f8fafc; color: #1e293b; }
 
     /* Header */
-    header { background: #1e40af; color: white; padding: 0 24px; height: 56px; display: flex; align-items: center; gap: 12px; }
-    header h1 { font-size: 18px; font-weight: 700; letter-spacing: -0.3px; }
-    .badge-online { background: #22c55e; color: white; font-size: 11px; padding: 2px 8px; border-radius: 999px; font-weight: 600; }
+    header { background: #6d28d9; color: white; padding: 0 28px; height: 58px; display: flex; align-items: center; justify-content: space-between; }
+    .logo { display: flex; align-items: center; gap: 10px; }
+    .logo-icon { font-size: 22px; }
+    .logo h1 { font-size: 18px; font-weight: 700; letter-spacing: -0.3px; }
+    .logo span { font-size: 13px; opacity: 0.75; margin-left: 2px; }
+    .badge-live { background: #22c55e; color: white; font-size: 11px; padding: 3px 10px; border-radius: 999px; font-weight: 600; }
 
     /* Layout */
-    .layout { display: grid; grid-template-columns: 300px 1fr; height: calc(100vh - 56px); }
+    .layout { display: grid; grid-template-columns: 280px 1fr; height: calc(100vh - 58px); }
 
     /* Sidebar */
     .sidebar { background: white; border-right: 1px solid #e2e8f0; overflow-y: auto; display: flex; flex-direction: column; }
-    .section { padding: 16px; border-bottom: 1px solid #f1f5f9; }
-    .section-title { font-size: 11px; font-weight: 700; color: #94a3b8; text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 10px; }
+    .sidebar-header { padding: 18px 16px 10px; border-bottom: 1px solid #f1f5f9; }
+    .sidebar-header h2 { font-size: 12px; font-weight: 700; color: #94a3b8; text-transform: uppercase; letter-spacing: 0.08em; }
 
-    /* Customer cards */
-    .customer-card { border: 2px solid #e2e8f0; border-radius: 8px; padding: 12px; margin-bottom: 8px; cursor: pointer; transition: all 0.12s; }
-    .customer-card:hover { border-color: #93c5fd; background: #f0f9ff; }
-    .customer-card.selected { border-color: #1d4ed8; background: #dbeafe; }
-    .cname { font-weight: 600; font-size: 14px; }
-    .cbalance { font-size: 20px; font-weight: 700; color: #1e40af; margin: 2px 0; }
-    .cmeta { display: flex; gap: 6px; align-items: center; flex-wrap: wrap; margin-top: 4px; }
-    .chip { font-size: 11px; padding: 1px 7px; border-radius: 4px; font-weight: 600; }
-    .chip-red { background: #fee2e2; color: #dc2626; }
-    .chip-green { background: #dcfce7; color: #15803d; }
-    .chip-yellow { background: #fef9c3; color: #a16207; }
-    .chip-gray { background: #f1f5f9; color: #64748b; }
+    .call-item { padding: 12px 16px; border-bottom: 1px solid #f8fafc; cursor: pointer; transition: background 0.1s; }
+    .call-item:hover { background: #f8fafc; }
+    .call-item.active { background: #f3e8ff; border-left: 3px solid #7c3aed; padding-left: 13px; }
+    .call-name { font-weight: 600; font-size: 14px; display: flex; align-items: center; gap: 6px; }
+    .call-purpose-preview { font-size: 12px; color: #64748b; margin-top: 2px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 220px; }
+    .call-time { font-size: 11px; color: #94a3b8; margin-top: 2px; }
+    .outcome-badge { font-size: 11px; padding: 1px 6px; border-radius: 4px; font-weight: 600; }
+    .oc-confirmed { background: #dcfce7; color: #15803d; }
+    .oc-declined { background: #fee2e2; color: #dc2626; }
+    .oc-callback_requested { background: #fef9c3; color: #a16207; }
+    .oc-completed { background: #f1f5f9; color: #64748b; }
+    .oc-in_progress { background: #dbeafe; color: #1d4ed8; }
 
-    /* Recent calls */
-    .call-row { padding: 8px 0; border-bottom: 1px solid #f8fafc; font-size: 13px; cursor: pointer; }
-    .call-row:last-child { border-bottom: none; }
-    .call-row:hover { color: #1d4ed8; }
-    .call-name { font-weight: 600; }
-    .call-sub { color: #94a3b8; font-size: 12px; }
-    .oc-paid { color: #16a34a; }
-    .oc-escalated { color: #d97706; }
-    .oc-none { color: #94a3b8; }
+    .empty-sidebar { padding: 32px 16px; text-align: center; color: #cbd5e1; font-size: 13px; }
 
-    /* Right panel */
+    /* Main panel */
     .panel { display: flex; flex-direction: column; overflow: hidden; }
 
-    /* Call form card */
-    .form-card { margin: 20px 24px 0; background: white; border-radius: 12px; border: 1px solid #e2e8f0; padding: 20px; }
-    .form-card h2 { font-size: 16px; font-weight: 700; margin-bottom: 4px; }
-    .form-card p { font-size: 13px; color: #64748b; margin-bottom: 14px; }
-    .form-row { display: grid; grid-template-columns: 1fr auto; gap: 10px; align-items: end; }
-    label { font-size: 12px; font-weight: 600; color: #374151; display: block; margin-bottom: 4px; }
-    input[type=tel] { width: 100%; padding: 10px 12px; border: 1px solid #d1d5db; border-radius: 8px; font-size: 14px; outline: none; }
-    input[type=tel]:focus { border-color: #3b82f6; box-shadow: 0 0 0 3px #eff6ff; }
-    .call-btn { padding: 10px 20px; background: #1d4ed8; color: white; border: none; border-radius: 8px; font-size: 14px; font-weight: 600; cursor: pointer; white-space: nowrap; transition: background 0.12s; }
-    .call-btn:hover:not(:disabled) { background: #1e40af; }
-    .call-btn:disabled { background: #93c5fd; cursor: not-allowed; }
+    /* New call form */
+    .new-call-card { margin: 24px 28px 0; background: white; border-radius: 16px; border: 1px solid #e2e8f0; padding: 24px; box-shadow: 0 1px 4px rgba(0,0,0,0.04); }
+    .new-call-card h2 { font-size: 18px; font-weight: 700; margin-bottom: 18px; color: #1e293b; }
 
-    /* Status strip */
-    .status { margin: 10px 24px 0; padding: 10px 14px; border-radius: 8px; font-size: 13px; display: none; }
-    .status.show { display: block; }
-    .status.active { background: #dbeafe; color: #1e40af; border: 1px solid #93c5fd; }
-    .status.done   { background: #dcfce7; color: #166534; border: 1px solid #86efac; }
-    .status.error  { background: #fee2e2; color: #dc2626; border: 1px solid #fca5a5; }
+    .contact-row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 16px; }
+    .field label { font-size: 12px; font-weight: 600; color: #374151; display: block; margin-bottom: 5px; }
+    .field input { width: 100%; padding: 10px 14px; border: 1.5px solid #e2e8f0; border-radius: 10px; font-size: 14px; outline: none; transition: border-color 0.12s; background: #fafafa; }
+    .field input:focus { border-color: #7c3aed; box-shadow: 0 0 0 3px #ede9fe; background: white; }
+    .field input::placeholder { color: #94a3b8; }
 
-    /* Transcript */
-    .transcript { flex: 1; overflow-y: auto; padding: 16px 24px 0; }
-    .t-title { font-size: 11px; font-weight: 700; color: #94a3b8; text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 12px; }
-    .turn { margin-bottom: 12px; }
-    .turn-label { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 3px; }
-    .turn-agent .turn-label   { color: #1d4ed8; }
-    .turn-customer .turn-label { color: #6b7280; }
-    .bubble { display: inline-block; padding: 9px 14px; border-radius: 12px; font-size: 14px; line-height: 1.5; max-width: 85%; }
-    .turn-agent   .bubble { background: #dbeafe; color: #1e3a8a; border-radius: 12px 12px 12px 3px; }
-    .turn-customer .bubble { background: #f1f5f9; color: #334155; border-radius: 12px 12px 3px 12px; }
+    /* Purpose block */
+    .purpose-block label { font-size: 12px; font-weight: 600; color: #374151; display: block; margin-bottom: 5px; }
+    .purpose-textarea { width: 100%; padding: 12px 14px; border: 1.5px solid #e2e8f0; border-radius: 10px; font-size: 14px; line-height: 1.6; resize: vertical; min-height: 88px; outline: none; font-family: inherit; color: #1e293b; background: #fafafa; transition: border-color 0.12s; }
+    .purpose-textarea:focus { border-color: #7c3aed; box-shadow: 0 0 0 3px #ede9fe; background: white; }
+    .purpose-textarea::placeholder { color: #94a3b8; }
 
-    /* Empty state */
-    .empty { text-align: center; padding: 48px 24px; color: #cbd5e1; }
-    .empty-icon { font-size: 48px; margin-bottom: 10px; }
+    /* Suggestions */
+    .suggestions-row { margin-top: 10px; display: flex; flex-wrap: wrap; gap: 7px; }
+    .suggestion-btn { font-size: 12px; padding: 5px 11px; background: #f8fafc; border: 1.5px solid #e2e8f0; border-radius: 20px; cursor: pointer; color: #475569; transition: all 0.12s; font-weight: 500; }
+    .suggestion-btn:hover { background: #ede9fe; border-color: #a78bfa; color: #6d28d9; }
+    .suggestion-btn.active { background: #ede9fe; border-color: #7c3aed; color: #6d28d9; font-weight: 600; }
 
-    /* Decision box */
-    .decision { margin: 16px 24px 24px; background: white; border: 1px solid #e2e8f0; border-radius: 12px; padding: 16px; }
-    .decision h3 { font-size: 11px; font-weight: 700; color: #94a3b8; text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 10px; }
-    .outcome-text { font-size: 16px; font-weight: 700; color: #1e40af; margin-bottom: 6px; }
-    .reason-item { font-size: 13px; color: #475569; margin: 2px 0; }
-    .check-item  { font-size: 13px; margin: 3px 0; }
+    /* Call button */
+    .call-action { display: flex; align-items: center; justify-content: flex-end; margin-top: 16px; gap: 12px; }
+    .char-count { font-size: 12px; color: #94a3b8; }
+    .call-btn { padding: 11px 24px; background: #7c3aed; color: white; border: none; border-radius: 10px; font-size: 14px; font-weight: 600; cursor: pointer; transition: background 0.12s; display: flex; align-items: center; gap: 7px; }
+    .call-btn:hover:not(:disabled) { background: #6d28d9; }
+    .call-btn:disabled { background: #c4b5fd; cursor: not-allowed; }
+
+    /* Status */
+    .status-bar { margin: 10px 28px 0; padding: 10px 16px; border-radius: 10px; font-size: 13px; display: none; font-weight: 500; }
+    .status-bar.show { display: block; }
+    .status-bar.active { background: #ede9fe; color: #6d28d9; border: 1px solid #c4b5fd; }
+    .status-bar.done   { background: #dcfce7; color: #166534; border: 1px solid #86efac; }
+    .status-bar.error  { background: #fee2e2; color: #dc2626; border: 1px solid #fca5a5; }
+
+    /* Transcript area */
+    .transcript-wrap { flex: 1; overflow-y: auto; padding: 16px 28px 28px; }
+    .transcript-title { font-size: 11px; font-weight: 700; color: #94a3b8; text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 14px; }
+
+    .turn { margin-bottom: 14px; }
+    .turn-label { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 4px; }
+    .turn-agent   .turn-label { color: #7c3aed; }
+    .turn-contact .turn-label { color: #64748b; }
+    .bubble { display: inline-block; padding: 10px 16px; border-radius: 14px; font-size: 14px; line-height: 1.55; max-width: 80%; }
+    .turn-agent   .bubble { background: #ede9fe; color: #3b0764; border-radius: 14px 14px 14px 4px; }
+    .turn-contact .bubble { background: #f1f5f9; color: #334155; border-radius: 14px 14px 4px 14px; }
+
+    .empty-transcript { text-align: center; padding: 40px 24px; color: #cbd5e1; }
+    .empty-icon { font-size: 44px; margin-bottom: 10px; }
+    .empty-text { font-size: 14px; }
+
+    /* Outcome panel */
+    .outcome-panel { margin: 0 28px 28px; background: white; border: 1px solid #e2e8f0; border-radius: 14px; padding: 18px; }
+    .outcome-panel h3 { font-size: 11px; font-weight: 700; color: #94a3b8; text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 10px; }
+    .outcome-value { font-size: 20px; font-weight: 700; color: #1e293b; margin-bottom: 4px; }
+    .outcome-notes { font-size: 14px; color: #475569; }
   </style>
 </head>
 <body>
 
 <header>
-  <h1>PayFlow AI</h1>
-  <span class="badge-online">● Live</span>
+  <div class="logo">
+    <span class="logo-icon">🔔</span>
+    <h1>Ava <span>Reminders</span></h1>
+  </div>
+  <span class="badge-live">● Live</span>
 </header>
 
 <div class="layout">
 
-  <!-- Sidebar -->
+  <!-- Sidebar: call history -->
   <div class="sidebar">
-    <div class="section">
-      <div class="section-title">Customers</div>
-      <div id="customer-list"><div style="color:#94a3b8;font-size:13px">Loading...</div></div>
+    <div class="sidebar-header">
+      <h2>Recent Calls</h2>
     </div>
-    <div class="section" style="flex:1">
-      <div class="section-title">Recent Calls</div>
-      <div id="recent-calls"><div style="color:#94a3b8;font-size:13px">No calls yet.</div></div>
+    <div id="call-list">
+      <div class="empty-sidebar">No calls yet.<br>Make your first call →</div>
     </div>
   </div>
 
   <!-- Main panel -->
   <div class="panel">
 
-    <!-- Form -->
-    <div class="form-card">
-      <h2>Make a Collection Call</h2>
-      <p id="selected-info">← Select a customer, then enter the number to call.</p>
-      <div class="form-row">
-        <div>
-          <label for="phone">Phone Number (E.164 format)</label>
-          <input type="tel" id="phone" placeholder="+14155550100" />
+    <!-- New call form -->
+    <div class="new-call-card">
+      <h2>New Call</h2>
+
+      <div class="contact-row">
+        <div class="field">
+          <label for="contact-name">Contact Name</label>
+          <input type="text" id="contact-name" placeholder="Sarah Miller" />
         </div>
-        <button class="call-btn" id="call-btn" onclick="startCall()" disabled>📞 Call</button>
+        <div class="field">
+          <label for="contact-phone">Phone Number</label>
+          <input type="tel" id="contact-phone" placeholder="+14155550100" />
+        </div>
+      </div>
+
+      <div class="purpose-block">
+        <label for="purpose">What's this call about?</label>
+        <textarea
+          id="purpose"
+          class="purpose-textarea"
+          placeholder="Describe what Ava should say and do on this call…"
+          oninput="onPurposeInput()"
+        ></textarea>
+
+        <div class="suggestions-row" id="suggestions"></div>
+      </div>
+
+      <div class="call-action">
+        <span class="char-count" id="char-count"></span>
+        <button class="call-btn" id="call-btn" onclick="startCall()">
+          📞 Call
+        </button>
       </div>
     </div>
 
-    <!-- Status -->
-    <div class="status" id="status"></div>
+    <div class="status-bar" id="status-bar"></div>
 
-    <!-- Transcript -->
-    <div class="transcript" id="transcript">
-      <div class="empty">
+    <div class="transcript-wrap" id="transcript-wrap">
+      <div class="empty-transcript">
         <div class="empty-icon">🎙️</div>
-        <div>Transcript will appear here during the call</div>
+        <div class="empty-text">Transcript will appear here during the call</div>
       </div>
     </div>
 
-    <!-- Decision -->
-    <div id="decision"></div>
+    <div id="outcome-panel"></div>
 
   </div>
 </div>
 
 <script>
-  let selected = null;
+  // ── Suggestion templates ──────────────────────────────────────────────
+  const SUGGESTIONS = [
+    {
+      label: "💅 Salon",
+      text: `Remind [NAME] of their [hair/nails/massage] appointment on [DAY] at [TIME] at [SALON NAME]. Ask them to confirm or call [NUMBER] to reschedule.`,
+    },
+    {
+      label: "🎉 Party invite",
+      text: `Invite [NAME] to [HOST]'s [birthday party / dinner / gathering] on [DATE] at [TIME] at [LOCATION]. Ask if they'll be joining and let them know to RSVP by [DATE].`,
+    },
+    {
+      label: "📚 Class / lesson",
+      text: `Remind [NAME] that their [yoga / guitar / tutoring] session is on [DAY] at [TIME] with [TEACHER] at [LOCATION]. Ask them to confirm attendance.`,
+    },
+    {
+      label: "🏥 Medical / dental",
+      text: `Remind [NAME] of their appointment with [DR. NAME] on [DAY] at [TIME] at [CLINIC]. Ask them to confirm or call [NUMBER] to reschedule at least 24 hours in advance.`,
+    },
+    {
+      label: "💪 Gym / PT",
+      text: `Remind [NAME] of their personal training session with [TRAINER] on [DAY] at [TIME]. Ask them to confirm they'll be there.`,
+    },
+    {
+      label: "📦 Delivery",
+      text: `Let [NAME] know their package is scheduled for delivery on [DATE] between [TIME WINDOW]. Ask if someone will be home, and if not, where to leave it.`,
+    },
+    {
+      label: "🎂 Birthday",
+      text: `Call [NAME] to wish them a happy birthday from [YOUR NAME / TEAM]. Keep it warm and genuine — this is a personal call, not a sales pitch.`,
+    },
+    {
+      label: "✏️ Custom",
+      text: ``,
+    },
+  ];
+
+  let activeSuggestion = null;
   let internalCallId = null;
   let pollTimer = null;
 
-  // ── Bootstrap ───────────────────────────────────────────────────────
-  loadCustomers();
-  loadRecentCalls();
+  // Render suggestion buttons
+  const suggestionsEl = document.getElementById('suggestions');
+  SUGGESTIONS.forEach((s, i) => {
+    const btn = document.createElement('button');
+    btn.className = 'suggestion-btn';
+    btn.textContent = s.label;
+    btn.onclick = () => pickSuggestion(btn, s, i);
+    suggestionsEl.appendChild(btn);
+  });
 
-  // ── Customers ───────────────────────────────────────────────────────
-  async function loadCustomers() {
-    const data = await fetch('/api/customers').then(r => r.json());
-    const el = document.getElementById('customer-list');
-    el.innerHTML = data.map(c => {
-      const hChip = `<span class="chip chip-${c.payment_history === 'good' ? 'green' : c.payment_history === 'fair' ? 'yellow' : 'red'}">${c.payment_history}</span>`;
-      return `<div class="customer-card" onclick="selectCustomer(this, ${esc(c)})">
-        <div class="cname">${c.name}</div>
-        <div class="cbalance">$${c.balance.toLocaleString()}</div>
-        <div class="cmeta">
-          <span class="chip chip-red">${c.days_overdue}d overdue</span>
-          ${hChip}
-          <span class="chip chip-gray">${c.previous_attempts} attempt${c.previous_attempts !== 1 ? 's' : ''}</span>
-        </div>
-      </div>`;
-    }).join('');
+  function pickSuggestion(btn, s, i) {
+    const ta = document.getElementById('purpose');
+    if (activeSuggestion === i) {
+      ta.value = '';
+      btn.classList.remove('active');
+      activeSuggestion = null;
+    } else {
+      ta.value = s.text;
+      ta.focus();
+      document.querySelectorAll('.suggestion-btn').forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+      activeSuggestion = i;
+    }
+    updateCharCount();
   }
 
-  function esc(obj) {
-    return JSON.stringify(obj).replace(/"/g, '&quot;');
+  function onPurposeInput() {
+    // Clear active suggestion highlight when user edits manually
+    document.querySelectorAll('.suggestion-btn').forEach(b => b.classList.remove('active'));
+    activeSuggestion = null;
+    updateCharCount();
   }
 
-  function selectCustomer(el, c) {
-    document.querySelectorAll('.customer-card').forEach(x => x.classList.remove('selected'));
-    el.classList.add('selected');
-    selected = c;
-    document.getElementById('selected-info').innerHTML =
-      `<strong>${c.name}</strong> &nbsp;·&nbsp; <strong>$${c.balance.toLocaleString()}</strong> outstanding &nbsp;·&nbsp; ${c.days_overdue} days overdue`;
-    document.getElementById('call-btn').disabled = false;
+  function updateCharCount() {
+    const len = document.getElementById('purpose').value.length;
+    const el = document.getElementById('char-count');
+    el.textContent = len > 0 ? `${len} chars` : '';
   }
 
   // ── Start call ──────────────────────────────────────────────────────
   async function startCall() {
-    const phone = document.getElementById('phone').value.trim();
-    if (!phone) { alert('Enter a phone number in E.164 format (+1...)'); return; }
-    if (!selected) { alert('Select a customer first'); return; }
+    const name    = document.getElementById('contact-name').value.trim();
+    const phone   = document.getElementById('contact-phone').value.trim();
+    const purpose = document.getElementById('purpose').value.trim();
+
+    if (!name)    { alert('Enter the contact\'s name'); return; }
+    if (!phone)   { alert('Enter a phone number (e.g. +14155550100)'); return; }
+    if (!purpose) { alert('Describe what this call is about'); return; }
 
     const btn = document.getElementById('call-btn');
     btn.disabled = true;
     btn.textContent = '⏳ Connecting…';
+
     setStatus('Initiating call via Vapi…', 'active');
-    document.getElementById('transcript').innerHTML = '<div class="t-title">Live Transcript</div><div style="color:#94a3b8;font-size:13px;padding:8px 0">Connecting…</div>';
-    document.getElementById('decision').innerHTML = '';
+    clearTranscript();
+    document.getElementById('outcome-panel').innerHTML = '';
+    internalCallId = null;
 
     try {
       const res = await fetch('/api/call/start', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ phone_number: phone, customer_id: selected.id, invoice_id: selected.invoice_id }),
+        body: JSON.stringify({ contact_name: name, phone_number: phone, purpose }),
       });
       if (!res.ok) {
         const err = await res.json();
@@ -208,8 +286,13 @@
       }
       const data = await res.json();
       internalCallId = data.internal_call_id;
-      setStatus(`📞 Call live · ${data.vapi_call_id.slice(0, 8)}…`, 'active');
+
+      setStatus(`📞 Calling ${name}…  ·  ${data.vapi_call_id.slice(0,8)}`, 'active');
       btn.textContent = '📞 In progress…';
+
+      // Show opening line immediately
+      renderTurns([{ speaker: 'agent', message: data.opening_line }]);
+
       pollTimer = setInterval(poll, 2000);
     } catch (e) {
       setStatus(`Error: ${e.message}`, 'error');
@@ -223,73 +306,112 @@
     if (!internalCallId) return;
     try {
       const data = await fetch(`/api/call/${internalCallId}/log`).then(r => r.json());
-      renderTranscript(data.turns);
+      renderTurns(data.turns);
       if (data.call.status !== 'in_progress') {
         clearInterval(pollTimer); pollTimer = null;
         const btn = document.getElementById('call-btn');
-        btn.disabled = !selected;
+        btn.disabled = false;
         btn.textContent = '📞 Call';
-        setStatus(`✅ Call ended · ${data.call.outcome || 'no outcome'}`, 'done');
-        if (data.decision) renderDecision(data.decision);
-        loadRecentCalls();
+        const oc = data.call.outcome || 'completed';
+        setStatus(`Call ended · ${outcomeLabel(oc)}`, 'done');
+        renderOutcome(data.call);
+        loadCallHistory();
       }
     } catch (_) {}
   }
 
-  // ── Render ──────────────────────────────────────────────────────────
-  function renderTranscript(turns) {
-    const el = document.getElementById('transcript');
-    if (!turns.length) { el.innerHTML = '<div class="t-title">Live Transcript</div><div style="color:#94a3b8;font-size:13px">Waiting for first message…</div>'; return; }
-    el.innerHTML = '<div class="t-title">Live Transcript</div>' + turns.map(t => `
-      <div class="turn turn-${t.speaker}">
-        <div class="turn-label">${t.speaker === 'agent' ? '🤖 Ava' : '👤 Customer'}</div>
-        <div class="bubble">${t.message}</div>
-      </div>`).join('');
-    el.scrollTop = el.scrollHeight;
+  // ── Render helpers ──────────────────────────────────────────────────
+  function renderTurns(turns) {
+    if (!turns || !turns.length) return;
+    const wrap = document.getElementById('transcript-wrap');
+    wrap.innerHTML = `<div class="transcript-title">Live Transcript</div>` +
+      turns.map(t => `
+        <div class="turn turn-${t.speaker}">
+          <div class="turn-label">${t.speaker === 'agent' ? '🔔 Ava' : '👤 ' + (document.getElementById('contact-name').value.trim() || 'Contact')}</div>
+          <div class="bubble">${escHtml(t.message)}</div>
+        </div>`).join('');
+    wrap.scrollTop = wrap.scrollHeight;
   }
 
-  function renderDecision(d) {
-    const checks = Object.entries(d.policy_checks)
-      .map(([k, v]) => `<div class="check-item">${v.result === 'pass' ? '✅' : '❌'} <strong>${k.replace(/_/g,' ')}</strong>: ${v.detail}</div>`)
-      .join('');
-    document.getElementById('decision').innerHTML = `
-      <div class="decision">
-        <h3>Agent Decision</h3>
-        <div class="outcome-text">${d.outcome}</div>
-        ${d.reasoning.map(r => `<div class="reason-item">· ${r}</div>`).join('')}
-        <div style="margin-top:10px">${checks}</div>
+  function renderOutcome(call) {
+    const emoji = { confirmed:'✅', declined:'❌', callback_requested:'📞', wrong_number:'❓', completed:'💬' };
+    const oc = call.outcome || 'completed';
+    document.getElementById('outcome-panel').innerHTML = `
+      <div class="outcome-panel">
+        <h3>Outcome</h3>
+        <div class="outcome-value">${emoji[oc] || '💬'} ${outcomeLabel(oc)}</div>
+        ${call.notes ? `<div class="outcome-notes">${escHtml(call.notes)}</div>` : ''}
       </div>`;
   }
 
-  async function loadRecentCalls() {
+  function outcomeLabel(oc) {
+    return { confirmed:'Confirmed', declined:'Declined', callback_requested:'Callback Requested',
+             wrong_number:'Wrong Number', completed:'Completed', in_progress:'In Progress' }[oc] || oc;
+  }
+
+  function clearTranscript() {
+    document.getElementById('transcript-wrap').innerHTML = `
+      <div class="empty-transcript">
+        <div class="empty-icon">📞</div>
+        <div class="empty-text">Connecting…</div>
+      </div>`;
+  }
+
+  function escHtml(s) {
+    return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+  }
+
+  // ── Call history ────────────────────────────────────────────────────
+  async function loadCallHistory() {
     const data = await fetch('/api/calls').then(r => r.json());
-    const el = document.getElementById('recent-calls');
-    if (!data.length) { el.innerHTML = '<div style="color:#94a3b8;font-size:13px">No calls yet.</div>'; return; }
-    el.innerHTML = data.slice(0, 8).map(c => {
-      const oc = c.outcome || (c.status === 'in_progress' ? 'in progress' : '—');
-      const cls = oc.includes('paid') || oc.includes('accepted') ? 'oc-paid' : oc === 'escalated' ? 'oc-escalated' : 'oc-none';
-      return `<div class="call-row" onclick="loadCallLog('${c.id}')">
-        <div class="call-name ${cls}">${c.customer_name}</div>
-        <div class="call-sub">${oc} · $${c.balance?.toLocaleString() || '—'} · ${(c.started_at || '').slice(0,10)}</div>
+    const el = document.getElementById('call-list');
+    if (!data.length) {
+      el.innerHTML = '<div class="empty-sidebar">No calls yet.<br>Make your first call →</div>';
+      return;
+    }
+    el.innerHTML = data.map(c => {
+      const oc = c.status === 'in_progress' ? 'in_progress' : (c.outcome || 'completed');
+      const badge = `<span class="outcome-badge oc-${oc}">${outcomeLabel(oc)}</span>`;
+      const time = (c.started_at || '').slice(11, 16);
+      const date = (c.started_at || '').slice(0, 10);
+      return `<div class="call-item${c.id === internalCallId ? ' active' : ''}" onclick="viewCall('${c.id}')">
+        <div class="call-name">${escHtml(c.contact_name)} ${badge}</div>
+        <div class="call-purpose-preview">${escHtml(c.purpose || '')}</div>
+        <div class="call-time">${date} · ${time}</div>
       </div>`;
     }).join('');
   }
 
-  async function loadCallLog(callId) {
-    internalCallId = callId;
+  async function viewCall(callId) {
     if (pollTimer) { clearInterval(pollTimer); pollTimer = null; }
+    internalCallId = callId;
     const data = await fetch(`/api/call/${callId}/log`).then(r => r.json());
-    renderTranscript(data.turns);
-    if (data.decision) renderDecision(data.decision);
+
+    // Update contact name input for display
+    document.getElementById('contact-name').value = data.call.contact_name;
+
+    renderTurns(data.turns);
+    if (data.call.status !== 'in_progress' && data.call.outcome) {
+      renderOutcome(data.call);
+    }
     const oc = data.call.outcome || data.call.status;
-    setStatus(`Viewing call · ${oc}`, data.call.status === 'in_progress' ? 'active' : 'done');
+    setStatus(`Viewing · ${data.call.contact_name} · ${outcomeLabel(oc)}`,
+              data.call.status === 'in_progress' ? 'active' : 'done');
+
+    // Re-highlight in sidebar
+    document.querySelectorAll('.call-item').forEach(el => {
+      el.classList.toggle('active', el.onclick?.toString().includes(callId));
+    });
   }
 
   function setStatus(msg, cls) {
-    const el = document.getElementById('status');
+    const el = document.getElementById('status-bar');
     el.textContent = msg;
-    el.className = `status show ${cls}`;
+    el.className = `status-bar show ${cls}`;
   }
+
+  // ── Init ────────────────────────────────────────────────────────────
+  loadCallHistory();
 </script>
 </body>
 </html>

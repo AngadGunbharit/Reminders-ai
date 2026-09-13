@@ -81,7 +81,7 @@ _STATE_GOALS = {
 }
 
 
-def system_prompt(state: State, policy: dict, customer_id: str) -> str:
+def system_prompt(state: State, policy: dict, customer_id: str, custom_instructions: str = "") -> str:
     goal = _STATE_GOALS.get(state.value, "Continue the call and advance_state when this step is complete.")
     return f"""You are {AGENT_NAME}, an AI collections agent calling on behalf of {COMPANY_NAME}.
 
@@ -106,6 +106,7 @@ def system_prompt(state: State, policy: dict, customer_id: str) -> str:
    - Max discount: {policy['max_discount_pct']}%
 
 6. STYLE: Keep replies short, like a real phone call.
+{f"7. SPECIAL INSTRUCTIONS FOR THIS CALL: {custom_instructions}" if custom_instructions else ""}
 
 Customer ID for tool calls: {customer_id}
 """
@@ -150,6 +151,7 @@ class CollectionsAgent:
     customer_id: str
     invoice_id: str
     use_llm: bool = field(default_factory=lambda: bool(os.environ.get("ANTHROPIC_API_KEY")))
+    custom_instructions: str = ""
     call_id: str = field(init=False)
     sm: CallStateMachine = field(default_factory=CallStateMachine)
     policy: dict = field(init=False)
@@ -441,7 +443,7 @@ class CollectionsAgent:
             response = self._client.messages.create(
                 model="claude-sonnet-4-6",
                 max_tokens=1024,
-                system=system_prompt(self.sm.current, self.policy, self.customer_id),
+                system=system_prompt(self.sm.current, self.policy, self.customer_id, self.custom_instructions),
                 tools=available,
                 messages=self._llm_messages,
             )
